@@ -1,0 +1,2444 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d0c12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sideman">
+<link rel="manifest" href='data:application/manifest+json,{"name":"Sideman","short_name":"Sideman","display":"standalone","background_color":"#0d0c12","theme_color":"#0d0c12","start_url":"."}'>
+<title>SIDEMAN — piano jazz</title>
+<style>
+  :root{
+    --bg:#0d0c12; --bg2:#15141d; --bg3:#1e1c29; --line:#2b283a;
+    --txt:#ece9f4; --dim:#8f8aa5; --acc:#e6a54c; --acc2:#c07e26;
+    --ok:#3ecf7a; --bad:#ff5c6c; --blue:#6da2ff; --purple:#a78bfa;
+    --r:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    overscroll-behavior:none; user-select:none;-webkit-user-select:none;
+  }
+  #app{max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+  main{flex:1;padding:16px 16px 90px}
+  header{padding:14px 16px 0;display:flex;align-items:center;justify-content:space-between}
+  .logo{font-weight:800;font-size:18px;letter-spacing:.5px}
+  .logo span{color:var(--acc)}
+  .streak{font-weight:700;font-size:14px;background:var(--bg2);border:1px solid var(--line);
+    padding:6px 12px;border-radius:20px}
+  .card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+  .hero{background:linear-gradient(135deg,#1c1826,#2b2138);border:1px solid var(--line)}
+  .hero .lvl{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+  .hero .lvlname{font-size:22px;font-weight:800;margin:2px 0 10px;color:var(--acc)}
+  .xpbar{height:8px;background:#0009;border-radius:4px;overflow:hidden}
+  .xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc2),var(--acc));border-radius:4px;transition:width .4s}
+  .hero .xptxt{font-size:12px;color:var(--dim);margin-top:6px}
+  .btn{display:inline-block;border:none;border-radius:12px;padding:13px 20px;font-size:15px;font-weight:700;
+    cursor:pointer;background:var(--acc);color:#1a1200;width:100%;text-align:center;margin-top:12px}
+  .btn:active{transform:scale(.97)}
+  .btn.ghost{background:var(--bg3);color:var(--txt);border:1px solid var(--line)}
+  .btn.small{width:auto;padding:9px 16px;font-size:13px;margin-top:0}
+  .btn.ok{background:var(--ok);color:#02180b}
+  .btn:disabled{opacity:.4;pointer-events:none}
+  .mod{margin-bottom:20px}
+  .mod h2{font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;padding-left:4px}
+  .lesson{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--line);
+    border-radius:var(--r);padding:14px;margin-bottom:8px;cursor:pointer}
+  .lesson:active{background:var(--bg3)}
+  .lesson.locked{opacity:.38;pointer-events:none}
+  .lesson .ico{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    font-size:18px;background:var(--bg3);flex-shrink:0}
+  .lesson.done .ico{background:#153524;color:var(--ok)}
+  .lesson .t{flex:1;min-width:0}
+  .lesson .t b{display:block;font-size:15px}
+  .lesson .t small{color:var(--dim);font-size:12px}
+  .lesson .xp{font-size:12px;font-weight:700;color:var(--acc);flex-shrink:0}
+  .lesson.done .xp{color:var(--ok)}
+  .overlay{position:fixed;inset:0;background:var(--bg);z-index:50;overflow-y:auto;display:none}
+  .overlay.open{display:block}
+  .overlay .inner{max-width:520px;margin:0 auto;padding:16px 16px 40px}
+  .topbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;position:sticky;top:0;background:var(--bg);padding:12px 0;z-index:5}
+  .topbar .back{width:38px;height:38px;border-radius:11px;background:var(--bg2);border:1px solid var(--line);
+    color:var(--txt);font-size:18px;cursor:pointer}
+  .topbar b{font-size:16px}
+  .theory{line-height:1.55;font-size:15px}
+  .theory h3{color:var(--acc);font-size:16px;margin:18px 0 6px}
+  .theory p{margin-bottom:10px;color:#cdc8dd}
+  .theory ul{margin:0 0 10px 18px;color:#cdc8dd}
+  .theory li{margin-bottom:5px}
+  .theory .tip{background:#1a2438;border-left:3px solid var(--blue);padding:10px 12px;border-radius:0 10px 10px 0;
+    margin:12px 0;font-size:14px;color:#c9d6f0}
+  .theory .warn{background:#2e1a20;border-left:3px solid var(--bad);padding:10px 12px;border-radius:0 10px 10px 0;
+    margin:12px 0;font-size:14px;color:#f0c9ce}
+  .theory .formula{background:var(--bg3);border:1px solid var(--line);border-radius:10px;padding:12px;
+    text-align:center;font-weight:800;font-size:16px;margin:12px 0;letter-spacing:.4px}
+  .theory kbd{background:var(--bg3);border:1px solid var(--line);border-radius:6px;padding:1px 7px;
+    font-family:inherit;font-weight:700;color:var(--acc)}
+  .kbdwrap{margin:14px 0;touch-action:none}
+  .kbd{position:relative;height:170px;border-radius:10px;overflow:hidden;background:#000}
+  .key{position:absolute;top:0;cursor:pointer}
+  .key.white{height:100%;background:linear-gradient(#fdfdfd,#e8e8ec);border:1px solid #999;border-radius:0 0 6px 6px;z-index:1}
+  .key.black{height:60%;background:linear-gradient(#3a3a42,#111);border-radius:0 0 5px 5px;z-index:2;border:1px solid #000}
+  .key.white span{position:absolute;bottom:5px;left:0;right:0;text-align:center;font-size:10px;color:#888;font-weight:700}
+  .key.black span{position:absolute;bottom:5px;left:0;right:0;text-align:center;font-size:8px;color:#ccc;font-weight:700}
+  .key.white.sel{background:linear-gradient(#ffe9b0,var(--acc))}
+  .key.black.sel{background:linear-gradient(#c99a2e,var(--acc2))}
+  .key.white.hint{background:linear-gradient(#cfe4ff,#8db8f5)}
+  .key.black.hint{background:linear-gradient(#3b6db5,#2a4d80)}
+  .key.flash{background:var(--ok)!important}
+  .key.white.wrong{background:linear-gradient(#ffb3bb,var(--bad))!important}
+  .key.black.wrong{background:linear-gradient(#b53b47,#7a222c)!important}
+  .exhead{text-align:center;margin:8px 0 4px}
+  .exhead .target{font-size:32px;font-weight:800;letter-spacing:1px}
+  .exhead .sub{color:var(--dim);font-size:13px;margin-top:3px}
+  .exprog{display:flex;gap:5px;justify-content:center;margin:10px 0;flex-wrap:wrap}
+  .exprog i{width:9px;height:9px;border-radius:50%;background:var(--bg3);border:1px solid var(--line)}
+  .exprog i.on{background:var(--acc);border-color:var(--acc)}
+  .exprog i.bad{background:var(--bad);border-color:var(--bad)}
+  .exrow{display:flex;gap:10px;margin-top:10px}
+  .exrow .btn{margin-top:0}
+  .fb{text-align:center;min-height:22px;font-weight:700;font-size:14px;margin-top:10px}
+  .fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+  .chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+  .chip{padding:8px 14px;border-radius:10px;background:var(--bg3);border:1px solid var(--line);font-weight:700;font-size:14px}
+  .chip.cur{background:var(--acc);color:#1a1200;border-color:var(--acc)}
+  .chip.done{background:#153524;color:var(--ok);border-color:#1d4a31}
+  .quizopt{display:block;width:100%;text-align:left;background:var(--bg2);border:1px solid var(--line);
+    color:var(--txt);border-radius:12px;padding:14px;font-size:15px;margin-bottom:8px;cursor:pointer;font-weight:600}
+  .quizopt.right{background:#153524;border-color:var(--ok)}
+  .quizopt.wrong{background:#3a1a20;border-color:var(--bad)}
+  .quizwhy{background:var(--bg3);border-radius:10px;padding:12px;font-size:14px;color:#cdc8dd;margin-top:4px;line-height:1.5}
+  .earbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .earbtns .btn{margin-top:0}
+  .checkstep{display:flex;gap:10px;align-items:flex-start;background:var(--bg2);border:1px solid var(--line);
+    border-radius:12px;padding:12px;margin-bottom:8px;font-size:14px;line-height:1.45;color:#cdc8dd}
+  .checkstep b{color:var(--txt)}
+  .checkstep .n{background:var(--acc);color:#1a1200;min-width:24px;height:24px;border-radius:8px;display:flex;
+    align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0}
+  .metro{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--line);
+    border-radius:var(--r);padding:14px;margin:12px 0;flex-wrap:wrap}
+  .metro .bpm{font-size:26px;font-weight:800;min-width:78px;text-align:center}
+  .metro .bpm small{display:block;font-size:11px;color:var(--dim);font-weight:600}
+  .metro .adj{width:40px;height:40px;border-radius:11px;background:var(--bg3);border:1px solid var(--line);
+    color:var(--txt);font-size:20px;font-weight:700;cursor:pointer}
+  .metro .go{flex:1}
+  .metro.beat{border-color:var(--acc)}
+  nav{position:fixed;bottom:0;left:0;right:0;background:rgba(13,12,18,.92);backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);z-index:40}
+  nav .in{max-width:520px;margin:0 auto;display:flex}
+  nav button{flex:1;background:none;border:none;color:var(--dim);padding:10px 0 max(10px,env(safe-area-inset-bottom));
+    font-size:11px;font-weight:700;cursor:pointer}
+  nav button .i{display:block;font-size:20px;margin-bottom:2px}
+  nav button.on{color:var(--acc)}
+  #toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--bg3);
+    border:1px solid var(--acc);color:var(--txt);padding:12px 22px;border-radius:14px;font-weight:700;
+    z-index:100;transition:transform .35s;font-size:14px;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+  #toast.show{transform:translateX(-50%) translateY(0)}
+  .shake{animation:shake .35s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+  .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:14px;text-align:center}
+  .stat b{display:block;font-size:24px;color:var(--acc)}
+  .stat small{color:var(--dim);font-size:12px}
+  h1.page{font-size:22px;font-weight:800;margin-bottom:14px}
+  .cheat{font-size:14px;line-height:1.6;color:#cdc8dd}
+  .cheat b{color:var(--acc)}
+  .cheat .row{padding:8px 0;border-bottom:1px solid var(--line)}
+  .cheat .row:last-child{border-bottom:none}
+  .selrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .selrow .tag{padding:8px 14px;border-radius:20px;background:var(--bg3);border:1px solid var(--line);
+    font-size:13px;font-weight:700;cursor:pointer}
+  .selrow .tag.on{background:var(--acc);color:#1a1200;border-color:var(--acc)}
+  .daily .row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .daily .row:last-of-type{border-bottom:none}
+  .daily .st{width:26px;height:26px;border-radius:9px;background:var(--bg3);display:flex;align-items:center;
+    justify-content:center;font-size:14px;flex-shrink:0}
+  .daily .row.ok .st{background:#153524;color:var(--ok)}
+  .daily .row span{flex:1;font-size:14px;font-weight:600}
+  .daily .row.ok span{color:var(--dim);text-decoration:line-through}
+  .daily .bonus{font-size:12px;color:var(--dim);text-align:center;margin-top:8px}
+  .week{display:flex;gap:6px;align-items:flex-end;height:78px;margin-top:14px}
+  .week .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:4px;text-align:center}
+  .week .bar{background:linear-gradient(180deg,var(--acc),var(--acc2));border-radius:4px;min-height:2px}
+  .week .col.z .bar{background:var(--bg3)}
+  .week small{font-size:10px;color:var(--dim);font-weight:700}
+  .griditem{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--line);
+    border-radius:var(--r);padding:14px;margin-bottom:8px;cursor:pointer}
+  .griditem:active{background:var(--bg3)}
+  .griditem .ico{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    font-size:19px;background:var(--bg3);flex-shrink:0}
+  .griditem .t{flex:1;min-width:0}
+  .griditem .t b{display:block;font-size:15px}
+  .griditem .t small{color:var(--dim);font-size:12px}
+  .griditem .played{color:var(--ok);font-size:12px;font-weight:700;flex-shrink:0}
+  .strip{display:flex;gap:6px;overflow-x:auto;padding:6px 2px;margin:12px 0;scrollbar-width:none}
+  .strip::-webkit-scrollbar{display:none}
+  .strip .cc{flex-shrink:0;min-width:56px;text-align:center;padding:9px 8px;border-radius:10px;background:var(--bg2);
+    border:1px solid var(--line);font-weight:800;font-size:13px;color:var(--dim);transition:transform .12s,background .12s;white-space:nowrap}
+  .strip .cc.cur{background:var(--acc);color:#1a1200;border-color:var(--acc);transform:scale(1.08)}
+  .strip .cc small{display:block;font-size:9px;font-weight:700;opacity:.7}
+  .nowchord{text-align:center;margin:6px 0 2px}
+  .nowchord .cn{font-size:36px;font-weight:800;letter-spacing:.5px;line-height:1.1}
+  .nowchord .nx{color:var(--dim);font-size:13px;margin-top:2px;font-weight:700}
+  .nowchord .sc{color:var(--blue);font-size:13px;margin-top:6px;font-weight:700}
+  .nowchord .gd{color:var(--acc);font-size:13px;margin-top:2px;font-weight:700}
+  .tempo{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--line);
+    border-radius:var(--r);padding:12px 14px;margin:10px 0}
+  .tempo input[type=range]{flex:1;accent-color:var(--acc)}
+  .tempo .tv{font-weight:800;min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
+  .tempo .tl{font-size:12px;color:var(--dim);font-weight:700;min-width:44px}
+  .bilanbars{margin:16px 0 4px}
+  .brow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .brow .bl{font-size:13px;font-weight:700;min-width:100px}
+  .brow .bt{flex:1;height:12px;background:#0009;border-radius:6px;overflow:hidden}
+  .brow .bt i{display:block;height:100%;border-radius:6px;transition:width .5s}
+  .brow .bv{font-size:13px;font-weight:800;min-width:26px;text-align:right;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">SIDE<span>MAN</span></div>
+    <div class="streak" id="streakBadge">🔥 0</div>
+  </header>
+  <main id="main"></main>
+  <nav><div class="in">
+    <button data-tab="parcours" class="on"><span class="i">🎼</span>Parcours</button>
+    <button data-tab="jam"><span class="i">🎷</span>Jam</button>
+    <button data-tab="grilles"><span class="i">🥁</span>Grilles</button>
+    <button data-tab="outils"><span class="i">🛠</span>Outils</button>
+  </div></nav>
+</div>
+<div class="overlay" id="overlay"><div class="inner" id="overlayInner"></div></div>
+<div id="toast"></div>
+<script>
+/* ================================================================
+   SIDEMAN — le piano jazz, du voicing au chorus
+   ================================================================ */
+/* ---------------- données musicales ---------------- */
+const USER='Simon';
+const NOTE = ['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+const NOTE_FR = ['Do','Do#','Ré','Mib','Mi','Fa','Fa#','Sol','Lab','La','Sib','Si'];
+const CT = {
+  maj7:{iv:[0,4,7,11], suf:'maj7', nom:'majeur 7'},
+  dom7:{iv:[0,4,7,10], suf:'7',    nom:'dominante'},
+  m7:  {iv:[0,3,7,10], suf:'m7',   nom:'mineur 7'},
+  m7b5:{iv:[0,3,6,10], suf:'m7♭5', nom:'demi-diminué'},
+  dim7:{iv:[0,3,6,9],  suf:'°7',   nom:'diminué 7'},
+  maj6:{iv:[0,4,7,9],  suf:'6',    nom:'sixte'},
+  m6:  {iv:[0,3,7,9],  suf:'m6',   nom:'mineur 6'},
+  mM7: {iv:[0,3,7,11], suf:'m(maj7)', nom:'mineur majeur 7'},
+  dom9:{iv:[0,4,7,10,14], suf:'9',  nom:'neuvième'},
+  maj9:{iv:[0,4,7,11,14], suf:'maj9', nom:'majeur 9'},
+  m9:  {iv:[0,3,7,10,14], suf:'m9', nom:'mineur 9'},
+  dom7b9:{iv:[0,4,7,10,13], suf:'7♭9', nom:'dominante ♭9'},
+  dom7s5:{iv:[0,4,8,10], suf:'7♯5', nom:'dominante ♯5'},
+  sus7:{iv:[0,5,7,10], suf:'7sus4', nom:'sus4'},
+};
+const chordName=(root,t)=>NOTE[root]+CT[t].suf;
+const chordNotes=(root,t)=>CT[t].iv.map(i=>NOTE[(root+i)%12]).join(' – ');
+/* guides = la 3ᵉ et la 7ᵉ (ou la 6ᵉ sur les accords de sixte) */
+function guideIv(t){ const iv=CT[t].iv; return [iv[1], iv.find(x=>x>=9&&x<=11)]; }
+/* voicing jouable générique : fondamentale en bas, le reste empilé au-dessus */
+function voicingFor(root,t){
+  const need=CT[t].iv.map(x=>(root+x)%12);
+  let cur=48+(root%12);
+  const v=[cur], rest=need.filter(p=>p!==root%12);
+  let scan=cur+1;
+  while(rest.length && scan<84){
+    const i=rest.indexOf(scan%12);
+    if(i>-1){ v.push(scan); rest.splice(i,1); }
+    scan++;
+  }
+  return v;
+}
+const isBlack = m => [1,3,6,8,10].includes(m%12);
+
+/* rootless (Bill Evans) — intervalles depuis la fondamentale, forme jouée telle quelle */
+const RLA={ m7:[3,7,10,14], dom7:[4,9,10,14], maj7:[4,7,11,14], maj6:[4,7,9,14], m6:[3,7,9,14],
+            m9:[3,7,10,14], dom9:[4,9,10,14], maj9:[4,7,11,14],
+            m7b5:[3,6,10], dim7:[3,6,9], dom7b9:[4,10,13], dom7s5:[4,8,10], sus7:[5,10,14], mM7:[3,7,11,14] };
+const RLB={ m7:[10,14,15,19], dom7:[10,14,16,21], maj7:[11,14,16,19] };
+const SHELL=t=>{ const [g3,g7]=guideIv(t); return [0,g3,g7]; };
+const SOWHAT=[0,5,10,15,19]; /* 3 quartes + une tierce majeure, depuis la note du bas */
+/* upper structures : sur une dominante, guides (3+♭7) + triade majeure au-dessus */
+const US={
+  II: {iv:[4,10,14,18,21], tag:'9 ♯11 13', off:2},   /* triade majeure du IIe degré */
+  bVI:{iv:[4,10,15,20], tag:'♯9 ♭13', off:8}, /* triade majeure du ♭VIe */
+  bII:{iv:[4,10,13,17,20], tag:'♭9 11 ♭13', off:1},  /* triade majeure du ♭IIe */
+};
+
+const SCALES={
+  ion:{n:'ionien (majeur)', p:[0,2,4,5,7,9,11]},
+  dor:{n:'dorien', p:[0,2,3,5,7,9,10]},
+  mixo:{n:'mixolydien', p:[0,2,4,5,7,9,10]},
+  loc:{n:'locrien', p:[0,1,3,5,6,8,10]},
+  lyd:{n:'lydien', p:[0,2,4,6,7,9,11]},
+  alt:{n:'altérée', p:[0,1,3,4,6,8,10]},
+  dimHW:{n:'dim ½ton/ton', p:[0,1,3,4,6,7,9,10]},
+  dimWH:{n:'dim ton/½ton', p:[0,2,3,5,6,8,9,11]},
+  bebop:{n:'bebop dominante', p:[0,2,4,5,7,9,10,11]},
+  blues:{n:'blues', p:[0,3,5,6,7,10]},
+  melmin:{n:'mineure mélodique', p:[0,2,3,5,7,9,11]},
+};
+/* quelle gamme sur quel accord (l'option simple d'abord) */
+const CHORD_SCALE={ m7:'dor', m9:'dor', dom7:'mixo', dom9:'mixo', sus7:'mixo',
+  maj7:'ion', maj9:'ion', maj6:'ion', m7b5:'loc', dim7:'dimWH', m6:'melmin', mM7:'melmin',
+  dom7b9:'dimHW', dom7s5:'alt' };
+function scaleFor(root,t){
+  const k=CHORD_SCALE[t]||'ion', s=SCALES[k];
+  return { name:NOTE[root]+' '+s.n, notes:s.p.map(x=>NOTE[(root+x)%12]).join(' ') };
+}
+const R12=[0,1,2,3,4,5,6,7,8,9,10,11];
+const CYCLE=[0,5,10,3,8,1,6,11,4,9,2,7]; /* cycle des quartes depuis C */
+const iiVI=k=>[{root:(k+2)%12,t:'m7'},{root:(k+7)%12,t:'dom7'},{root:k,t:'maj7'}];
+const iiVIm=k=>[{root:(k+2)%12,t:'m7b5'},{root:(k+7)%12,t:'dom7b9'},{root:k,t:'m6'}];
+
+const LEVELS=[
+  [0,'Pianiste de salon'],[150,'Jam du mardi soir'],[350,'Piano bar du coin'],
+  [600,'Sideman appelé'],[950,'Premier trio'],[1400,'Leader du quartet'],
+  [2000,'Tête d\'affiche'],[2800,'Signé par un label'],[3800,'Légende du club']
+];
+
+/* ---------------- état / sauvegarde ---------------- */
+const DEFAULT_STATE={xp:0, done:{}, prog:{}, streak:0, lastDay:null, earBest:0, daily:null, hist:{}, best:{}, labels:false, grids:{}, assessed:false, bilan:null};
+(function(){ try{
+  const p=new URLSearchParams(location.search).get('restore'); if(!p) return;
+  let s=p.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='=';
+  const obj=JSON.parse(decodeURIComponent(escape(atob(s))));
+  if(obj && typeof obj.xp==='number') localStorage.setItem('sideman',JSON.stringify(obj));
+  history.replaceState(null,'',location.pathname);
+}catch(e){} })();
+let S=load();
+function load(){
+  try{ return Object.assign({},DEFAULT_STATE,JSON.parse(localStorage.getItem('sideman')||'{}')); }
+  catch(e){ return {...DEFAULT_STATE}; }
+}
+function save(){ localStorage.setItem('sideman',JSON.stringify(S)); }
+function levelOf(xp){
+  let cur=LEVELS[0], next=null;
+  for(let i=0;i<LEVELS.length;i++){ if(xp>=LEVELS[i][0]) cur=LEVELS[i]; else {next=LEVELS[i]; break;} }
+  return {name:cur[1], base:cur[0], next};
+}
+function award(xp){
+  const before=levelOf(S.xp).name;
+  S.xp+=xp;
+  const today=todayStr();
+  S.hist[today]=(S.hist[today]||0)+xp;
+  Object.keys(S.hist).forEach(k=>{ if(Date.now()-new Date(k).getTime()>15*864e5) delete S.hist[k]; });
+  if(S.lastDay!==today){
+    const y=new Date(Date.now()-864e5).toISOString().slice(0,10);
+    S.streak=(S.lastDay===y)?S.streak+1:1;
+    S.lastDay=today;
+  }
+  save(); updateHeader();
+  const after=levelOf(S.xp).name;
+  if(after!==before) setTimeout(()=>toast('🎩 Nouvelle scène : '+after),1400);
+}
+function updateHeader(){ document.getElementById('streakBadge').textContent='🔥 '+S.streak; }
+const todayStr=()=>new Date().toISOString().slice(0,10);
+
+/* paliers : une leçon se maîtrise sur plusieurs jours, 1 palier max/jour */
+function lessonReps(l){ return REPS[l.id]||3; }
+function progOf(id){ if(!S.prog) S.prog={}; return S.prog[id]||{n:0,last:null}; }
+function palierTakenToday(id){ return progOf(id).last===todayStr(); }
+
+function ensureDaily(){
+  const t=todayStr();
+  if(!S.daily || S.daily.date!==t){ S.daily={date:t, done:[false,false,false], bonus:false}; save(); }
+  return S.daily;
+}
+function dailyMark(i){
+  const d=ensureDaily();
+  if(d.done[i]) return;
+  d.done[i]=true; save();
+  if(d.done.every(Boolean) && !d.bonus){
+    d.bonus=true; save(); award(30);
+    setTimeout(()=>toast('📅 Le set du jour est bouclé · +30 XP'),900);
+  }
+}
+
+/* ---------------- audio ---------------- */
+let AC=null;
+function ac(){
+  if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)();
+  if(AC.state==='suspended') AC.resume();
+  return AC;
+}
+function playNote(midi, dur=1.4, vel=.4, when=0){
+  const ctx=ac(), t=ctx.currentTime+when;
+  const f=440*Math.pow(2,(midi-69)/12);
+  const g=ctx.createGain(), lp=ctx.createBiquadFilter();
+  lp.type='lowpass'; lp.frequency.value=Math.min(f*7,9500); lp.Q.value=.5;
+  g.connect(lp); lp.connect(ctx.destination);
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(vel,t+.006);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  [[1,1,0],[2,.32,5],[2.997,.1,-5],[4.003,.05,0],[5.01,.02,3]].forEach(([m,a,d])=>{
+    const o=ctx.createOscillator(), og=ctx.createGain();
+    o.type='sine'; o.frequency.value=f*m; o.detune.value=d; og.gain.value=a;
+    o.connect(og); og.connect(g); o.start(t); o.stop(t+dur+.1);
+  });
+}
+function playChord(midis, dur=1.6, strum=.028){
+  midis.slice().sort((a,b)=>a-b).forEach((m,i)=>playNote(m,dur,.35,i*strum));
+}
+function chime(){ [72,76,79,84].forEach((m,i)=>playNote(m,.7,.22,i*.07)); }
+function buzz(){ if(navigator.vibrate) navigator.vibrate(80); }
+function tada(){ if(navigator.vibrate) navigator.vibrate([30,40,30]); }
+
+/* contrebasse : triangle filtré, attaque ronde */
+function playBass(midi, when=0, dur=.55, vel=.5){
+  const ctx=ac(), t=ctx.currentTime+when;
+  const f=440*Math.pow(2,(midi-69)/12);
+  const o=ctx.createOscillator(), g=ctx.createGain(), lp=ctx.createBiquadFilter();
+  o.type='triangle'; o.frequency.value=f;
+  lp.type='lowpass'; lp.frequency.value=850;
+  g.gain.setValueAtTime(0,t);
+  g.gain.linearRampToValueAtTime(vel,t+.012);
+  g.gain.setTargetAtTime(.0001,t+dur*.7,.07);
+  o.connect(g); g.connect(lp); lp.connect(ctx.destination);
+  o.start(t); o.stop(t+dur+.2);
+}
+/* ride & charley : bruit blanc filtré */
+let NOISE=null;
+function noiseBuf(){
+  if(NOISE) return NOISE;
+  const ctx=ac(), b=ctx.createBuffer(1,ctx.sampleRate*.5,ctx.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  NOISE=b; return b;
+}
+function playRide(when=0, accent=false){
+  const ctx=ac(), t=ctx.currentTime+when;
+  const s=ctx.createBufferSource(); s.buffer=noiseBuf();
+  const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=6500;
+  const g=ctx.createGain();
+  g.gain.setValueAtTime(accent?.2:.11,t);
+  g.gain.exponentialRampToValueAtTime(.001,t+(accent?.32:.15));
+  s.connect(hp); hp.connect(g); g.connect(ctx.destination);
+  s.start(t); s.stop(t+.4);
+}
+function playHat(when=0){
+  const ctx=ac(), t=ctx.currentTime+when;
+  const s=ctx.createBufferSource(); s.buffer=noiseBuf();
+  const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=900; bp.Q.value=2;
+  const g=ctx.createGain();
+  g.gain.setValueAtTime(.22,t);
+  g.gain.exponentialRampToValueAtTime(.001,t+.06);
+  s.connect(bp); bp.connect(g); g.connect(ctx.destination);
+  s.start(t); s.stop(t+.1);
+}
+
+/* ---------------- métronome (mode jazz : clic sur 2 et 4) ---------------- */
+const Metro={
+  bpm:100, on:false, mode:'all', timer:null, nextT:0, beat:0, el:null,
+  click(t,accent){
+    const ctx=ac(), o=ctx.createOscillator(), g=ctx.createGain();
+    o.frequency.value=accent?1500:900; g.gain.setValueAtTime(accent?.5:.3,t);
+    g.gain.exponentialRampToValueAtTime(.001,t+.05);
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t+.06);
+  },
+  start(){
+    this.stop(); this.on=true; const ctx=ac();
+    this.nextT=ctx.currentTime+.05; this.beat=0;
+    this.timer=setInterval(()=>{
+      while(this.nextT<ctx.currentTime+.12){
+        const b=this.beat%4;
+        if(this.mode==='all') this.click(this.nextT,b===0);
+        else if(b===1||b===3) this.click(this.nextT,false);
+        if(this.el){ this.el.classList.add('beat'); setTimeout(()=>this.el&&this.el.classList.remove('beat'),100); }
+        this.beat++; this.nextT+=60/this.bpm;
+      }
+    },25);
+  },
+  stop(){ this.on=false; if(this.timer){clearInterval(this.timer); this.timer=null;} }
+};
+function metroWidget(bpm, jazz){
+  Metro.bpm=bpm||Metro.bpm;
+  if(jazz) Metro.mode='24';
+  const d=document.createElement('div'); d.className='metro';
+  d.innerHTML=`<button class="adj" data-d="-5">−</button>
+    <div class="bpm"><span>${Metro.bpm}</span><small>BPM</small></div>
+    <button class="adj" data-d="5">+</button>
+    <div class="tag m24" style="padding:8px 12px;border-radius:16px;border:1px solid var(--line);font-size:12px;font-weight:700;cursor:pointer;background:${Metro.mode==='24'?'var(--acc)':'var(--bg3)'};color:${Metro.mode==='24'?'#1a1200':'var(--txt)'}">2&4</div>
+    <button class="btn small go">▶ Lancer</button>`;
+  Metro.el=d;
+  const span=d.querySelector('.bpm span'), go=d.querySelector('.go'), m24=d.querySelector('.m24');
+  d.querySelectorAll('.adj').forEach(b=>b.onclick=()=>{
+    Metro.bpm=Math.max(40,Math.min(260,Metro.bpm+ +b.dataset.d)); span.textContent=Metro.bpm;
+  });
+  m24.onclick=()=>{
+    Metro.mode=Metro.mode==='24'?'all':'24';
+    m24.style.background=Metro.mode==='24'?'var(--acc)':'var(--bg3)';
+    m24.style.color=Metro.mode==='24'?'#1a1200':'var(--txt)';
+  };
+  go.onclick=()=>{
+    if(Metro.on){ Metro.stop(); go.textContent='▶ Lancer'; }
+    else { Metro.start(); go.textContent='◼ Stop'; }
+  };
+  return d;
+}
+
+/* ---------------- clavier ---------------- */
+function buildKeyboard(lo, hi, onTap){
+  const wrap=document.createElement('div'); wrap.className='kbdwrap';
+  const kbd=document.createElement('div'); kbd.className='kbd'; wrap.appendChild(kbd);
+  const whites=[]; for(let m=lo;m<=hi;m++) if(!isBlack(m)) whites.push(m);
+  const wW=100/whites.length;
+  whites.forEach((m,i)=>{
+    const k=document.createElement('div'); k.className='key white'; k.dataset.midi=m;
+    k.style.left=(i*wW)+'%'; k.style.width=wW+'%';
+    if(S.labels) k.innerHTML=`<span>${NOTE[m%12]}</span>`;
+    else if(m%12===0) k.innerHTML=`<span>C${Math.floor(m/12)-1}</span>`;
+    kbd.appendChild(k);
+  });
+  for(let m=lo;m<=hi;m++){
+    if(!isBlack(m)) continue;
+    const wIdx=whites.filter(w=>w<m).length, bw=wW*.62;
+    const k=document.createElement('div'); k.className='key black'; k.dataset.midi=m;
+    k.style.left=(wIdx*wW-bw/2)+'%'; k.style.width=bw+'%';
+    if(S.labels) k.innerHTML=`<span>${NOTE[m%12]}</span>`;
+    kbd.appendChild(k);
+  }
+  kbd.addEventListener('pointerdown',e=>{
+    const k=e.target.closest('.key'); if(!k) return;
+    e.preventDefault(); onTap(+k.dataset.midi,k);
+  });
+  wrap.kbd=kbd;
+  wrap.keyEl=m=>kbd.querySelector(`[data-midi="${m}"]`);
+  wrap.clearSel=()=>kbd.querySelectorAll('.sel,.hint,.target').forEach(k=>k.classList.remove('sel','hint','target'));
+  return wrap;
+}
+
+/* ---------------- démos audio deux mains (leçons) ---------------- */
+function compVoi(r,t){
+  const iv=RLA[t]||CT[t].iv.slice(1);
+  const bottomPc=(r+iv[0])%12;
+  const b=52+((bottomPc-52)%12+12)%12; /* note du bas entre 52 et 63 */
+  return iv.map(x=>b+(x-iv[0]));
+}
+function playDemo(spec,bpm,rate){
+  ac(); rate=rate||1;
+  const beat=60/(bpm*rate), t0=.12, bars=spec.prog.length;
+  if(spec.ride){
+    for(let b=0;b<bars;b++){
+      [[0,0],[1,1],[1.667,0],[2,0],[3,1],[3.667,0]].forEach(([p,a])=>playRide(t0+(b*4+p)*beat,!!a));
+      [1,3].forEach(p=>playHat(t0+(b*4+p)*beat));
+    }
+  }
+  spec.prog.forEach((ch,bi)=>{
+    const base=t0+bi*4*beat, R=36+(ch.root%12), iv=CT[ch.t].iv;
+    if(spec.lh==='shell'){
+      const [g3,g7]=guideIv(ch.t);
+      playNote(R, beat*3.8, .45, base);
+      playNote(R+12+g3, beat*3.7, .27, base+.012);
+      playNote(R+12+g7, beat*3.7, .27, base+.024);
+    } else if(spec.lh==='root'){
+      playNote(R, beat*3.8, .45, base);
+    } else if(spec.lh==='walk'){
+      const nx=spec.prog[(bi+1)%bars];
+      walkBar([{r:ch.root,t:ch.t}], nx.root).forEach((m,b)=>playBass(m, base+b*beat, beat*1.05, .5));
+    }
+    if(spec.rhHits){
+      const pat=spec.rhHits[bi%spec.rhHits.length], v=compVoi(ch.root,ch.t);
+      pat.forEach(([p,d])=>v.forEach((m,ix)=>playNote(m,(d||1)*beat*.9,.27,base+p*beat+ix*.01)));
+    }
+  });
+  if(spec.melody) spec.melody.forEach(x=>playNote(x.n, beat*(x.d||.5)*.95, .42, t0+x.b*beat));
+}
+
+/* ================================================================
+   CURRICULUM — 22 leçons pour passer de « bon pianiste » à jazzman
+   ================================================================ */
+const CURRICULUM=[
+{ id:'ma', title:'Module 1 · L\'ADN du jazz', lessons:[
+  { id:'a1', icon:'🎨', title:'Les cinq espèces de 7e', sub:'maj7 · 7 · m7 · ø7 · °7 — et leurs rôles', xp:50,
+    theory:`
+<p>Tu joues déjà bien. Mais le jazz ne se joue pas en accords : il se joue en <b>fonctions</b>. Chaque espèce de 7e a un métier, et tant que tu ne les nommes pas instantanément, tu liras les grilles comme un touriste lit le métro.</p>
+<h3>Les cinq espèces</h3>
+<ul>
+<li><b>maj7</b> (1·3·5·7) — le repos, la maison. Le I.</li>
+<li><b>7</b> (1·3·5·♭7) — la tension qui veut résoudre une quarte plus haut. Le V.</li>
+<li><b>m7</b> (1·♭3·5·♭7) — le mouvement, l'élan. Le ii.</li>
+<li><b>m7♭5</b> (1·♭3·♭5·♭7) — le ii du mode mineur. Dit « demi-diminué », noté ø7.</li>
+<li><b>°7</b> (1·♭3·♭5·♭♭7) — l'accord de passage, symétrique (que des tierces mineures).</li>
+</ul>
+<div class="formula">Une grille jazz = presque uniquement ces cinq objets, enchaînés en ii–V–I.</div>
+<div class="tip">Le °7 se recopie tous les 3 demi-tons : C°7 = E♭°7 = G♭°7 = A°7. Quatre noms, un seul accord. Apprends-en trois (C°7, C♯°7, D°7) et tu les as tous.</div>
+<p>L'exercice tire les cinq espèces dans les 12 tonalités. Tu ne devines pas, tu construis — et vite.</p>`,
+    ex:{type:'chord', gen:{types:['maj7','dom7','m7','m7b5','dim7'], roots:R12, count:10}, sub:'Les 5 espèces, toutes tonalités. 4 notes à chaque fois.'}},
+  { id:'a2', icon:'🌶', title:'Tensions : 9, 11, 13', sub:'Les étages au-dessus de la 7e', xp:60,
+    theory:`
+<p>Au-dessus de la 7e, on continue d'empiler des tierces : la <b>9</b> (= la 2 à l'octave), la <b>11</b> (= la 4), la <b>13</b> (= la 6). Ce sont les <b>tensions</b> — la couleur du jazz. Sans elles tu sonnes propre ; avec elles tu sonnes <i>jazz</i>.</p>
+<h3>Ce qu'il faut retenir</h3>
+<ul>
+<li>La 9 passe presque partout : C9, Cm9, Cmaj9 — même geste, une note de plus.</li>
+<li>La 11 juste frotte contre la 3 majeure → sur un accord majeur on joue la <b>♯11</b> (son lydien).</li>
+<li>La 13 = la 6 posée en haut. Sur une dominante, c'est le son « classe ».</li>
+<li>Sur les dominantes, tout peut s'altérer : <b>♭9, ♯9, ♯11, ♭13</b>. Plus c'est altéré, plus ça tire vers la résolution.</li>
+</ul>
+<div class="formula">Accord = étage 1-3-5-7 (l'identité) + étages 9-11-13 (la couleur)</div>
+<div class="warn">Règle d'or : les tensions ne remplacent jamais les guides (3 et 7). Elles s'ajoutent AU-DESSUS. Un C13 sans 3 ni ♭7, c'est juste un brouillard.</div>`,
+    ex:{type:'chord', gen:{types:['dom9','maj9','m9','dom7b9'], roots:[0,2,3,5,7,9,10], count:8}, sub:'Accords à 5 notes. La 9 en haut, les guides au milieu.'}},
+  { id:'a3', icon:'👹', title:'BOSS : l\'alphabet complet', sub:'12 accords, toutes espèces confondues', xp:90,
+    theory:`
+<p>Premier boss. 12 accords tirés parmi <b>toutes</b> les espèces vues (7e et 9e), toutes fondamentales — noires comprises, évidemment.</p>
+<ul>
+<li>Objectif : <b>10/12 minimum</b>. En dessous, tu recommences.</li>
+<li>Un jazzman lit « E♭m7♭5 » comme toi tu lis ton prénom. C'est ce réflexe qu'on fabrique ici.</li>
+</ul>
+<div class="tip">Astuce de lecture : identifie d'abord la famille (majeur ? mineur ? dominante ?), puis la couleur. Jamais note par note.</div>`,
+    ex:{type:'chord', gen:{types:['maj7','dom7','m7','m7b5','dim7','dom9','m9','maj9'], roots:R12, count:12}, pass:10, sub:'Boss : 10/12 minimum.'}},
+]},
+{ id:'mv', title:'Module 2 · Les voicings', lessons:[
+  { id:'v1', icon:'🐚', title:'Shells 3–7 : le squelette', sub:'Deux notes qui disent tout', xp:60,
+    theory:`
+<p>Oublie les accords en position fondamentale : au jazz, personne ne joue 1-3-5-7 empilé. La main gauche pro joue le <b>shell</b> : fondamentale + <b>3 + 7</b>. La quinte ? Au vestiaire — elle n'apporte aucune information.</p>
+<h3>Pourquoi 3 et 7</h3>
+<p>La 3 dit <b>majeur ou mineur</b>. La 7 dit <b>repos ou tension</b>. Ces deux notes s'appellent les <b>guide tones</b> — et voici le miracle du ii–V–I :</p>
+<div class="formula">Dm7 : F et C → G7 : F et B → Cmaj7 : E et B<br>À chaque changement, UNE seule guide bouge, d'un demi-ton.</div>
+<p>C'est ça, le son fluide des pianistes de club : les accords changent, la main glisse à peine.</p>
+<div class="tip">Au piano : boucle Dm7 → G7 → Cmaj7 en shells main gauche, yeux fermés, en sentant quelle note glisse. Puis descends le cycle : Cm7 → F7 → B♭maj7, etc.</div>`,
+    ex:{type:'chord', items:'shells', sub:'8 shells : fondamentale + 3 + 7. Rien d\'autre.'}},
+  { id:'v2', icon:'🎩', title:'Rootless A : le son Bill Evans', sub:'La main gauche sans fondamentale', xp:70,
+    theory:`
+<p>En trio, le bassiste joue la fondamentale. La rejouer à la main gauche, c'est lui marcher sur les pieds. Solution des années 50, toujours en vigueur : le voicing <b>rootless</b> — on vire la fondamentale, on ajoute la 9.</p>
+<h3>La forme A (depuis la 3)</h3>
+<div class="formula">m7 : 3–5–7–9 (Dm7 → F A C E)<br>7 : 3–13–7–9 (G7 → B E F A)<br>maj7 : 3–5–7–9 (Cmaj7 → E G B D)</div>
+<p>Regarde le ii–V–I complet : Dm7 (F A C E) → G7 (B E F A) → Cmaj7 (E G B D). La main reste <b>dans la même octave</b>, autour du Do central. C'est LE son de Bill Evans, Wynton Kelly, Red Garland.</p>
+<div class="warn">Zone cible : autour du Do central. Trop grave = boue, trop aigu = tu gênes ta main droite. Règle pratique : la note du bas du voicing entre Mi3 et Do4.</div>
+<div class="tip">Remarque : le rootless de Dm7 (F A C E) = un Fmaj7. Le rootless de G7 (B E F A) contient le tritone B–F, qui fait tout le travail de la dominante. Comprends, ne mémorise pas.</div>`,
+    ex:{type:'chord', items:'rootlessA', sub:'Forme A, sans la fondamentale. La 9 fait partie de l\'accord.'}},
+  { id:'v3', icon:'🔀', title:'A ou B : le voice leading', sub:'Deux formes pour ne jamais sauter', xp:80,
+    theory:`
+<p>Si tu joues tout en forme A, ta main saute à chaque ii–V. D'où la forme <b>B</b> : le même accord, reconstruit depuis la 7.</p>
+<h3>La forme B (depuis la 7)</h3>
+<div class="formula">m7 : 7–9–3–5 (Dm7 → C E F A)<br>7 : 7–9–3–13 (G7 → F A B E)<br>maj7 : 7–9–3–5 (Cmaj7 → B D E G)</div>
+<h3>La règle d'alternance</h3>
+<p>Dans un ii–V–I : si le ii est en A, le V passe en B, le I revient en A. Exemple en Do : Dm7 <b>A</b> (F A C E) → G7 <b>B</b> (F A B E) : seule le Do descend sur Si. → Cmaj7 <b>A</b> (E G B D). Zéro saut, jamais.</p>
+<div class="tip">Convention pratique : ii–V–I dont le ii commence entre C et F♯ → commence en A. Entre G et B → commence en B. Comme ça tu restes toujours dans la bonne zone du clavier.</div>
+<p>L'exercice enchaîne des ii–V–I avec la forme imposée à chaque accord. Regarde ce qui bouge : presque rien. C'est le but.</p>`,
+    ex:{type:'prog', items:'rootlessAB', sub:'ii–V–I en A/B/A. Chaque accord : la forme exacte demandée.'}},
+  { id:'v4', icon:'🌀', title:'Quartal : le voicing So What', sub:'Trois quartes + une tierce', xp:60,
+    theory:`
+<p>1959, <i>Kind of Blue</i>. Sur « So What », Bill Evans répond au thème avec un voicing devenu une signature : <b>trois quartes justes empilées + une tierce majeure au sommet</b>.</p>
+<div class="formula">Depuis la note du bas : +5, +5, +5, +4 demi-tons<br>Ex : E–A–D–G–B (le « So What chord » sur Dm)</div>
+<h3>Pourquoi c'est génial</h3>
+<ul>
+<li>Ni majeur ni mineur : un son <b>ouvert, modal</b>, parfait sur les vamps dorien.</li>
+<li>Il se déplace en parallèle sur la gamme : monte tout d'un ton, ça sonne encore.</li>
+<li>C'est le son de McCoy Tyner, de Herbie Hancock — le jazz d'après 1960.</li>
+</ul>
+<div class="tip">Sur Dm7 dorien : pose le So What depuis Mi (E A D G B), puis depuis Ré (D G C F A). Alterne les deux : tu viens de jouer l'intro de « So What ».</div>`,
+    ex:{type:'chord', items:'sowhat', sub:'Depuis la note du bas indiquée : +5, +5, +5, +4.'}},
+]},
+{ id:'mc', title:'Module 3 · Le ii–V–I, partout', lessons:[
+  { id:'c1', icon:'🧭', title:'ii–V–I majeur : tout le cycle', sub:'La phrase de base, 12 tonalités', xp:80,
+    theory:`
+<p>Le ii–V–I est au jazz ce que le sujet-verbe-complément est au français. Le connaître « en Do » ne sert à rien : les grilles modulent sans prévenir. Il te le faut <b>dans les 12 tonalités</b>, dans les doigts, sans réfléchir.</p>
+<h3>La méthode : le cycle des quartes</h3>
+<div class="formula">C → F → B♭ → E♭ → A♭ → D♭ → G♭ → B → E → A → D → G</div>
+<p>Chaque tonalité est la <b>cible du V</b> de la précédente : le travail s'enchaîne naturellement. Dm7–G7–Cmaj7, puis Gm7–C7–Fmaj7, puis Cm7–F7–B♭maj7…</p>
+<div class="warn">Le piège : tu vas voler vers C, F, G et traîner des pieds vers D♭, G♭, B. C'est exactement pour ça qu'on suit le cycle SANS sauter de tonalité. Les tonalités que tu évites sont celles qui te manqueront en jam.</div>
+<div class="tip">Routine quotidienne (5 min) : shells main gauche, cycle complet, métronome 60. Quand c'est fluide : rootless. Quand c'est fluide : les deux mains.</div>`,
+    ex:{type:'prog', items:'cycleiiVI', sub:'4 tonalités du cycle, voicing libre. Construis, enchaîne.'}},
+  { id:'c2', icon:'🌑', title:'Le ii–V–i mineur', sub:'ø7 → 7♭9 → m6 : le côté obscur', xp:80,
+    theory:`
+<p>En mineur, la cadence change d'espèces : <b>iiø7 – V7♭9 – im6</b>. Exemple en Ré mineur : Em7♭5 → A7♭9 → Dm6.</p>
+<h3>Pourquoi ces accords-là</h3>
+<ul>
+<li>Le ii devient <b>ø7</b> : sa quinte baisse (elle appartient à la gamme mineure).</li>
+<li>Le V prend la <b>♭9</b> : la note qui pue le drame, à un demi-ton de la fondamentale cible.</li>
+<li>Le i arrive en <b>m6</b> ou m(maj7) : le mineur « qui reste » — un m7 sonnerait comme un ii qui repart ailleurs.</li>
+</ul>
+<div class="formula">En Ré mineur : Em7♭5 (E G B♭ D) → A7♭9 (A C♯ G B♭) → Dm6 (D F A B)</div>
+<div class="tip">Écoute le chromatisme caché : B♭ (du ø7) → B♭ (la ♭9 du V) → B (la 6 du i). Une seule voix qui monte d'un demi-ton à la toute fin. C'est ça qu'on doit entendre dans ton voicing.</div>
+<p>La moitié des standards a au moins un ii–V mineur. Celui qui ne les voit pas venir joue majeur dessus et ça s'entend à l'autre bout du club.</p>`,
+    ex:{type:'prog', items:'cycleiiVIm', sub:'2 tonalités mineures : iiø7 → V7♭9 → im6. Voicing libre.'}},
+  { id:'c3', icon:'↩️', title:'Turnarounds & sub tritonique', sub:'I–VI–ii–V et son double maléfique', xp:60,
+    theory:`
+<p>Fin de grille : il faut ramener l'auditeur au début sans que ça retombe. L'outil : le <b>turnaround</b> — I–VI–ii–V. En Do : <b>C – A7 – Dm7 – G7</b>. Le VI se joue en dominante (A7, pas Am7) : il tire vers Dm7.</p>
+<h3>La substitution tritonique</h3>
+<p>Tout V7 peut être remplacé par <b>le 7 situé à un triton</b> : G7 → D♭7. Pourquoi ça marche : ils partagent les mêmes guides. La 3 de G7 (B) = la 7 de D♭7 (C♭). La 7 de G7 (F) = la 3 de D♭7.</p>
+<div class="formula">C – A7 – Dm7 – G7 devient C – E♭7 – Dm7 – D♭7<br>→ basse chromatique : E♭ → D → D♭ → C</div>
+<p>C'est le son « descente d'escalier en velours » des fins de morceau. Les bassistes t'aimeront.</p>
+<div class="tip">Variante d'ouverture : iii–VI–ii–V (Em7 – A7 – Dm7 – G7), quand le I vient d'être joué et qu'on ne veut pas le répéter.</div>`,
+    ex:{type:'quiz', qs:[
+      {q:'Dans I–VI–ii–V en Do, le VI se joue…', opts:['Am7 (diatonique)','A7 (dominante) — il tire vers Dm7','A♭7'], a:1,
+       why:'Le VI passe en dominante : A7 contient C♯, sensible de Ré, qui aspire vers Dm7.'},
+      {q:'La substitution tritonique de G7 est…', opts:['D♭7','Em7','B7'], a:0,
+       why:'Le triton de G est D♭. G7 et D♭7 partagent les guides B/C♭ et F : même moteur, autre basse.'},
+      {q:'Pourquoi D♭7 peut remplacer G7 ?', opts:['Même fondamentale','Mêmes guide tones (3 et 7 échangées)','C\'est une convention arbitraire'], a:1,
+       why:'La 3 de l\'un est la 7 de l\'autre. Le tritone B–F, qui fait toute la tension, est identique.'},
+      {q:'iii–VI–ii–V en Do donne…', opts:['Em7 – A7 – Dm7 – G7','E7 – Am7 – D7 – G7','Em7 – Am7 – Dm7 – Gm7'], a:0,
+       why:'Le iii (Em7) remplace le I pour ne pas répéter C, puis la mécanique VI–ii–V s\'enclenche.'},
+      {q:'C – A7 – Dm7 – G7 avec les deux subs tritoniques devient…', opts:['C – E♭7 – Dm7 – D♭7','C – B♭7 – Dm7 – F7','C – A♭7 – D♭m7 – G♭7'], a:0,
+       why:'A7 → E♭7 et G7 → D♭7. La basse descend chromatiquement : (C) E♭ – D – D♭ – C.'},
+      {q:'Un turnaround sert à…', opts:['Finir le morceau','Relancer vers le début de la grille sans retomber','Changer de tonalité'], a:1,
+       why:'Deux dernières mesures : on recrée de la tension pour que le chorus suivant démarre lancé.'}
+    ]}},
+]},
+{ id:'ms', title:'Module 4 · Le bon son sur le bon accord', lessons:[
+  { id:'s1', icon:'🗺', title:'Chord scales : la carte', sub:'Dorien, mixolydien, ionien — même famille', xp:50,
+    theory:`
+<p>Tu connais tes gammes. Ce qui change au jazz : on pense <b>une gamme par accord</b>, pas une gamme par morceau.</p>
+<h3>Le ii–V–I, version gammes</h3>
+<div class="formula">iim7 → dorien · V7 → mixolydien · Imaj7 → ionien (ou lydien)</div>
+<p>En Do : Ré dorien, Sol mixolydien, Do ionien = <b>les mêmes 7 notes</b>. Alors pourquoi s'embêter ? Parce que l'impro ne consiste pas à « jouer la gamme » mais à viser les <b>notes de l'accord du moment</b>. Penser « Ré dorien » te fait entendre Ré comme centre, atterrir sur F et C — penser « gamme de Do » te fait jouer du blabla.</p>
+<ul>
+<li><b>Dorien</b> = mineur avec la 6 majeure (la note qui le distingue d'éolien).</li>
+<li><b>Mixolydien</b> = majeur avec la ♭7.</li>
+<li><b>Lydien</b> = majeur avec la ♯4 — sur un maj7, ce ♯11 sonne ouvert, moderne.</li>
+</ul>
+<div class="tip">Le réflexe à construire : je vois Gm7 → je pense « Sol dorien » → je SAIS que B♭ et F sont mes guides. Accord → gamme → cibles. Toujours dans cet ordre.</div>`,
+    ex:{type:'quiz', qs:[
+      {q:'Sur le Dm7 d\'un ii–V–I en Do, tu penses…', opts:['Ré éolien','Ré dorien','Ré phrygien'], a:1,
+       why:'Le ii d\'une tonalité majeure porte le mode dorien : les notes de Do majeur, centrées sur Ré.'},
+      {q:'Dorien vs éolien : la différence ?', opts:['La 6 (majeure en dorien)','La 3','La 7'], a:0,
+       why:'Dorien = mineur à 6 majeure (Ré dorien contient Si). C\'est SA couleur.'},
+      {q:'Sur G7, la gamme de base est…', opts:['Sol majeur','Sol mixolydien','Sol dorien'], a:1,
+       why:'Dominante → mixolydien : majeur avec ♭7 (le F, guide de G7).'},
+      {q:'Mixolydien = gamme majeure avec…', opts:['la 4 augmentée','la 7 abaissée','la 3 mineure'], a:1,
+       why:'Une seule altération : ♭7. C\'est elle qui fait « dominante ».'},
+      {q:'Sur Cmaj7, pour un son plus ouvert que ionien, tu joues…', opts:['Do lydien (♯4)','Do mixolydien','Do dorien'], a:0,
+       why:'Le F♯ lydien évite le frottement de la 4 juste et sonne moderne. Son maj7 de cinéma.'},
+      {q:'Ré dorien, Sol mixo, Do ionien : combien de notes différentes en tout ?', opts:['21','12','7'], a:2,
+       why:'Les mêmes 7 notes ! Ce qui change : le centre de gravité et les notes-cibles. C\'est toute la nuance entre « jouer la gamme » et improviser.'}
+    ]}},
+  { id:'s2', icon:'🎷', title:'La gamme bebop', sub:'8 notes pour tomber juste', xp:60,
+    theory:`
+<p>Problème du mixolydien : 7 notes sur des croches → les notes d'accord tombent une fois sur deux À CONTRETEMPS. Solution des boppers : ajouter <b>une note de passage</b> pour passer à 8.</p>
+<div class="formula">Bebop dominante = mixolydien + 7 majeure en passant<br>Sur G7 : G A B C D E F–F♯–G</div>
+<h3>La magie mécanique</h3>
+<p>Avec 8 notes, si tu démarres sur une note de l'accord SUR le temps, alors <b>toutes les notes de l'accord tombent sur les temps</b>, et toutes les notes de passage sur les contretemps. Tu descends la gamme et ça sonne bebop tout seul — c'est de la plomberie, pas de la magie.</p>
+<div class="warn">Le F♯ ne s'arrête jamais : c'est un passage, pas une destination. T'arrêter dessus = le poteau au milieu du toboggan.</div>
+<div class="tip">Exercice roi : descendre la bebop de G7 depuis chaque note de l'accord (G, B, D, F), métronome sur 2 et 4. Puis la même sur C7, F7, B♭7 — le cycle, encore et toujours.</div>`,
+    ex:{type:'scale', items:'bebop', sub:'La bebop dominante, note à note, en montant.'}},
+  { id:'s3', icon:'🚀', title:'Altérée & diminuée : le rayon « out »', sub:'Les gammes qui fâchent puis résolvent', xp:80,
+    theory:`
+<p>Sur une dominante qui va résoudre, tu as le droit — le devoir, certains soirs — de salir. Deux outils légaux :</p>
+<h3>1. La gamme altérée</h3>
+<div class="formula">1 · ♭9 · ♯9 · 3 · ♯11 · ♭13 · ♭7<br>= le mode 7 de la mineure mélodique (G altéré = A♭ mineure mélodique)</div>
+<p>Toutes les tensions altérées d'un coup, aucune note « tranquille » à part 1, 3, ♭7. Maximum de tension → résolution délicieuse. À réserver au V qui <b>va</b> vers son I.</p>
+<h3>2. La diminuée demi-ton/ton</h3>
+<div class="formula">Sur G7♭9 : G · A♭ · B♭ · B · C♯ · D · E · F</div>
+<p>Symétrique (elle se répète tous les 3 demi-tons), elle contient ♭9, ♯9, ♯11 ET la 13 naturelle. Le son Barry Harris / bebop tardif.</p>
+<div class="tip">Règle de survie : out sur le V, in sur le I. La dissonance n'est un langage que si elle atterrit. Une phrase altérée qui ne résout pas, c'est juste une erreur jouée fort.</div>`,
+    ex:{type:'scale', items:'alt', sub:'La gamme altérée, depuis la fondamentale.'}},
+]},
+{ id:'mi', title:'Module 5 · L\'improvisation', lessons:[
+  { id:'i1', icon:'🎯', title:'Guide tones : le fil rouge', sub:'Improviser avec 2 notes par accord', xp:80,
+    theory:`
+<p>Ton oreille du soir de jam ne te sauvera pas : une impro qui « suit la gamme » sans viser les accords sonne comme un GPS sans carte. Le remède tient en deux notes par accord : <b>la 3 et la 7</b>.</p>
+<h3>L'exercice fondateur</h3>
+<p>Sur une grille, joue <b>uniquement</b> les guides, en rondes : la 3 OU la 7 de chaque accord, en choisissant à chaque changement <b>la plus proche</b> de là où tu es. Tu obtiens une ligne qui descend par demi-tons — la <b>guide tone line</b>. C'est le squelette de tous les grands solos.</p>
+<div class="formula">Blues en F : A (3 de F7) → A♭ (7 de B♭7) → A (3 de F7)…<br>La ligne bouge d'un demi-ton ou pas du tout.</div>
+<h3>Puis on habille</h3>
+<ul>
+<li>Étape 1 : guides en rondes, rien d'autre. Oui c'est austère. C'est le but.</li>
+<li>Étape 2 : guides sur le temps 1, broderies autour le reste de la mesure.</li>
+<li>Étape 3 : phrases libres qui <b>atterrissent</b> sur une guide à chaque changement d'accord.</li>
+</ul>
+<div class="tip">Fais le test inverse : improvise en évitant les guides. Ça flotte, sans gravité. Les guides SONT la gravité.</div>`,
+    ex:{type:'guide', items:'bluesF', sub:'La ligne des guides sur le blues en Fa : 3 + 7 de chaque accord.'}},
+  { id:'i2', icon:'🧲', title:'Chromatisme : les enclosures', sub:'Encercler la cible avant de la jouer', xp:80,
+    theory:`
+<p>Le bebop a un secret de fabrication : on n'atterrit jamais directement sur la cible, on l'<b>encercle</b>.</p>
+<h3>Trois outils, du simple au pro</h3>
+<ul>
+<li><b>Approche chromatique</b> : un demi-ton sous la cible → la cible. (B → C)</li>
+<li><b>Approche diatonique</b> : la note de gamme au-dessus → la cible. (D → C)</li>
+<li><b>Enclosure</b> : au-dessus PUIS en-dessous, puis la cible. (D → B → C)</li>
+</ul>
+<div class="formula">Cible = une note de l'accord (3 en priorité), placée SUR le temps.<br>Les approches, elles, vivent sur les contretemps.</div>
+<p>Pourquoi ça sonne : les notes hors gamme deviennent <b>logiques</b> parce qu'elles ont une direction. Le chromatisme sans cible, c'est une faute ; avec cible, c'est du vocabulaire.</p>
+<div class="tip">Écoute la démo : chaque 3 du ii–V–I est encerclée. Puis fais-le au piano, lentement, sur le Carrousel ii–V–I de l'onglet Grilles.</div>`,
+    ex:{type:'practice', bpm:80, video:'jazz piano enclosures chromatic approach exercice',
+      demos:[
+        {label:'Enclosures sur les 3 du ii–V–I', lh:'shell', ride:true,
+         prog:[{root:2,t:'m7'},{root:7,t:'dom7'},{root:0,t:'maj7'},{root:0,t:'maj7'}],
+         melody:[{n:67,b:0,d:.67},{n:64,b:.667,d:.33},{n:65,b:1,d:1.5},{n:69,b:3.667,d:.33},
+                 {n:72,b:4,d:.67},{n:70,b:4.667,d:.33},{n:71,b:5,d:1.5},{n:74,b:7.667,d:.33},
+                 {n:77,b:8,d:.67},{n:75,b:8.667,d:.33},{n:76,b:9,d:2.5}]},
+      ],
+      steps:[
+        ['Cible les 3','Sur Dm7 → G7 → Cmaj7 (shells main gauche), joue UNIQUEMENT la 3 de chaque accord au temps 1 : F, puis B, puis E.'],
+        ['Approche chromatique','La même chose, mais chaque 3 est précédée du demi-ton inférieur, sur le « et » de 4 : E–F, B♭–B, E♭–E.'],
+        ['Enclosure complète','Au-dessus, en-dessous, cible : G–E–F sur Dm7, C–B♭–B sur G7, F–E♭–E sur Cmaj7. En croches swing.'],
+        ['Transpose','Le même exercice en F (Gm7–C7–Fmaj7) puis en B♭. Le geste doit devenir un réflexe, pas un calcul.']
+      ]}},
+  { id:'i3', icon:'🧬', title:'Le motif : une cellule, dix vies', sub:'Développer au lieu d\'empiler', xp:90,
+    theory:`
+<p>Le défaut n°1 des improvisateurs déjà à l'aise : le solo-catalogue. Des notes justes, des doigts rapides, <b>aucune histoire</b>. Les grands font l'inverse : peu de matière, beaucoup de développement.</p>
+<h3>La discipline du motif</h3>
+<p>Prends une cellule de 3-4 notes. Elle est ton UNIQUE matière première pour tout un chorus. Tu as le droit de :</p>
+<ul>
+<li><b>Répéter</b> — telle quelle. Plus fort que tu crois.</li>
+<li><b>Transposer</b> — la même forme sur l'accord suivant.</li>
+<li><b>Décaler</b> — la même, mais démarrée sur un autre temps.</li>
+<li><b>Inverser</b> — le contour à l'envers (monte ↔ descend).</li>
+<li><b>Étirer / rétrécir</b> — mêmes notes, autre rythme.</li>
+</ul>
+<div class="formula">Un chorus = UNE idée qui se transforme.<br>Pas douze idées qui se succèdent.</div>
+<div class="tip">Écoute n'importe quel solo de Sonny Rollins sur un blues : compte combien de fois il joue LA même cellule avant de la lâcher. Puis compte dans tes propres solos. Ça pique, hein.</div>`,
+    ex:{type:'practice', bpm:100, video:'motivic development jazz improvisation exercice',
+      steps:[
+        ['Choisis ta cellule','3 ou 4 notes, simple : par exemple 1–2–3 de l\'accord, ou un fragment que tu aimes. Chante-la avant de la jouer.'],
+        ['Un chorus, une cellule','Lance le Carrousel ii–V–I (onglet Grilles, piano coupé). Tout le chorus avec la cellule et ses transpositions. RIEN d\'autre.'],
+        ['Varie le rythme','Même cellule : une fois en croches, une fois en noires, une fois décalée d\'un demi-temps. Sens comme elle change de caractère.'],
+        ['Inverse le contour','Si elle monte, fais-la descendre. Termine le chorus en mélangeant original et miroir.'],
+        ['Le test','Enregistre 2 chorus au téléphone. Réécoute : est-ce qu\'on peut CHANTER ton solo ? Si non, recommence avec moins de notes.']
+      ]}},
+  { id:'i4', icon:'🌬', title:'Le phrasé : l\'espace est une note', sub:'Respirer, viser, se taire', xp:80,
+    theory:`
+<p>Deuxième maladie du pianiste avancé : la peur du silence. Résultat : des croches en continu, l'auditeur noyé. Or une phrase n'existe que par <b>le silence qui l'entoure</b>.</p>
+<h3>Les règles des souffleurs</h3>
+<p>Les pianistes ont un handicap : pas besoin de respirer. Les souffleurs, si — et c'est pour ça qu'ils phrasent mieux. On va donc <b>s'imposer leurs contraintes</b> :</p>
+<ul>
+<li><b>Phrase = une respiration</b> : 2 à 4 mesures max, puis silence obligatoire.</li>
+<li><b>Commence ailleurs que sur le temps 1</b> — entre sur le « et » de 1, ou au temps 2. Le thème vient de finir sur le 1, laisse-le respirer.</li>
+<li><b>Atterris sur une guide</b> au changement d'accord — le silence d'après sonnera plein, pas vide.</li>
+<li><b>Dynamique</b> : une phrase a une pointe. Tout jouer à la même force = électroencéphalogramme plat.</li>
+</ul>
+<div class="formula">Le solo se construit : sobre au début, dense à la fin.<br>Si tu commences fortissimo double-croches, tu n'as plus rien à raconter au 3ᵉ chorus.</div>
+<div class="tip">L'exercice du 4/4 : 4 mesures de jeu, 4 mesures de silence TOTAL (la section rythmique continue). Le silence te semblera interminable. C'est le signe que tu en avais besoin.</div>`,
+    ex:{type:'practice', bpm:120, video:'jazz phrasing space telling a story solo',
+      steps:[
+        ['4 mesures on / 4 off','Sur le Blues en Fa (onglet Grilles), impose-toi : 4 mesures de phrase, 4 mesures de silence complet, mains sur les genoux. 3 chorus.'],
+        ['Entre en 2','Chaque phrase démarre au temps 2 de la mesure — jamais sur le 1. Sens comme la phrase « flotte » puis retombe.'],
+        ['Atterris sur une guide','Chaque phrase se termine sur la 3 ou la 7 de l\'accord en cours, tenue. Vérifie à l\'oreille : ça doit sonner conclu.'],
+        ['Le test du téléphone','Enregistre 3 chorus. Réécoute en marchant : peux-tu chanter où les phrases commencent et finissent ? Y a-t-il UNE pointe d\'intensité par chorus ?']
+      ]}},
+  { id:'i5', icon:'🦜', title:'Le vocabulaire : voler comme un pro', sub:'Un lick, 12 tonalités, mille usages', xp:90,
+    theory:`
+<p>Personne n'a inventé sa langue maternelle. Le jazz s'apprend pareil : en <b>volant des phrases</b> aux disques, puis en les digérant jusqu'à ce qu'elles deviennent les tiennes.</p>
+<h3>Le protocole de digestion</h3>
+<ul>
+<li><b>1. Vole</b> — une phrase courte (2 mesures max) d'un solo que tu adores. Ou prends celle de la démo.</li>
+<li><b>2. Chante-la</b> — si tu ne peux pas la chanter, tu ne l'as pas. Tu l'as juste photocopiée.</li>
+<li><b>3. 12 tonalités</b> — par le cycle. Pas 3 tonalités. Douze.</li>
+<li><b>4. Déforme-la</b> — change son rythme, son départ, sa fin. C'est là qu'elle devient TOI.</li>
+<li><b>5. Place-la</b> — en situation réelle, sur une grille, sans y penser. Le jour où elle sort toute seule au bon endroit, elle est à toi.</li>
+</ul>
+<div class="warn">Un lick récité tel quel, au même endroit à chaque chorus, s'entend à des kilomètres. Le vol n'est pas le crime — la non-digestion, si.</div>
+<div class="tip">La démo te donne un classique du genre : montée sur Dm7, descente d'arpège de G7♭9, résolution sur la 3 de C. Deux mesures et demie de pur bebop, domaine public depuis 70 ans.</div>`,
+    ex:{type:'practice', bpm:110, video:'bebop lick 2 5 1 all 12 keys piano',
+      demos:[
+        {label:'Le lick, en Do (ii–V–I)', lh:'shell', ride:true,
+         prog:[{root:2,t:'m7'},{root:7,t:'dom7'},{root:0,t:'maj7'},{root:0,t:'maj7'}],
+         melody:[{n:62,b:0,d:.33},{n:65,b:.667,d:.33},{n:69,b:1,d:.33},{n:72,b:1.667,d:.33},
+                 {n:74,b:2,d:.33},{n:72,b:2.667,d:.33},{n:69,b:3,d:.33},{n:65,b:3.667,d:.33},
+                 {n:67,b:4,d:.33},{n:71,b:4.667,d:.33},{n:74,b:5,d:.33},{n:77,b:5.667,d:.33},
+                 {n:75,b:6,d:.33},{n:74,b:6.667,d:.33},{n:71,b:7,d:.33},{n:68,b:7.667,d:.33},
+                 {n:67,b:8,d:1.5},{n:72,b:9.667,d:.33},{n:76,b:10,d:2}]},
+      ],
+      steps:[
+        ['Apprends-le en Do','Mains séparées d\'abord : la phrase à droite, shells à gauche. Puis ensemble, lentement, au métronome 2&4.'],
+        ['Cycle complet','Le même lick dans les 12 tonalités en suivant le cycle : Do, Fa, Si♭, Mi♭… Une tonalité propre avant de passer à la suivante.'],
+        ['Déforme','Trois variantes minimum : départ décalé d\'un temps, rythme changé, fin différente. Écris-les si besoin.'],
+        ['En situation','Sur le Blues en Fa ou le Carrousel : glisse le lick UNE fois par chorus, à un endroit différent à chaque fois. Le reste du chorus : tes phrases à toi.']
+      ]}},
+]},
+{ id:'mr', title:'Module 6 · Le temps', lessons:[
+  { id:'r1', icon:'🕰', title:'Swing : le métronome sur 2 et 4', sub:'Le chabada, dans le corps', xp:70,
+    theory:`
+<p>Le swing ne se lit pas, il s'incarne. Deux composantes, non négociables :</p>
+<h3>1. Les croches ternaires</h3>
+<div class="formula">Deux croches écrites = longue-courte (≈ 2/3 + 1/3 du temps)<br>… et la deuxième est souvent LA plus accentuée.</div>
+<p>À tempo lent, très ternaire ; à tempo rapide, presque égal. C'est un curseur, pas une règle binaire.</p>
+<h3>2. Le temps est sur 2 et 4</h3>
+<p>Le rock frappe 1 et 3, le jazz respire sur <b>2 et 4</b> — le charleston du batteur. D'où l'exercice mythique : <b>métronome qui claque uniquement sur 2 et 4</b>. Au début ton cerveau va l'entendre sur 1 et 3 et tout s'effondre. C'est normal, et c'est exactement le travail.</p>
+<div class="warn">Test de vérité : si le métronome 2&4 te fait perdre le 1, ton temps était extérieur (tu suivais), pas intérieur (tu portais). En jam, personne ne te donnera le 1.</div>
+<div class="tip">Le métronome de cet exercice est déjà réglé en mode 2&4. Compte « 1 » à voix haute au début de chaque mesure : la bouche ancre ce que l'oreille lâche.</div>`,
+    ex:{type:'practice', bpm:80, metro24:true, video:'metronome 2 and 4 jazz practice swing feel',
+      demos:[
+        {label:'Croches swing sur F7 (ride derrière)', lh:'root', ride:true,
+         prog:[{root:5,t:'dom7'},{root:5,t:'dom7'}],
+         melody:[{n:65,b:0,d:.67},{n:67,b:.667,d:.33},{n:69,b:1,d:.67},{n:70,b:1.667,d:.33},
+                 {n:72,b:2,d:.67},{n:74,b:2.667,d:.33},{n:75,b:3,d:.33},{n:76,b:3.667,d:.33},{n:77,b:4,d:2}]},
+      ],
+      steps:[
+        ['Cale le 2&4','Métronome 60, mode 2&4 (déjà réglé). Claque des doigts avec lui une minute, puis compte les « 1 » à voix haute.'],
+        ['Gammes swing','Une gamme au choix en croches ternaires, accent sur la 2ᵉ croche de chaque paire. Longue-COURTE, longue-COURTE.'],
+        ['Shells sur 2&4','Main gauche : shells d\'un ii–V–I plaqués PILE sur les clics (donc sur 2 et 4). C\'est le comping de base de Red Garland.'],
+        ['Monte le tempo','80, puis 100. Si tu perds le 1, redescends. La vitesse sans le placement ne vaut rien.']
+      ]}},
+  { id:'r2', icon:'🥁', title:'Comping : Charleston & anticipations', sub:'Accompagner, c\'est un instrument', xp:70,
+    theory:`
+<p>En jam, tu passeras 80 % du temps à <b>accompagner</b>. Un pianiste au comping fade est un pianiste qu'on ne rappelle pas — peu importe ses chorus.</p>
+<h3>Les patterns fondateurs</h3>
+<ul>
+<li><b>Charleston</b> : temps 1 + le « et » de 2. LE pattern. S'il ne devait en rester qu'un.</li>
+<li><b>Anticipation</b> : l'accord du temps 1 joué sur le « et » de 4 <b>précédent</b>. Le comping qui pousse.</li>
+<li><b>Red Garland</b> : accords courts sur le « et » de 1 et le « et » de 3 — sec, précis, swing.</li>
+</ul>
+<div class="formula">Règles d'or : jouer COURT (des coups, pas des nappes) ·<br>varier (jamais 2 mesures identiques) · écouter le soliste (des trous, pas un mur)</div>
+<p>Le comping est une conversation : tu réponds au soliste, tu ne récites pas. S'il densifie, tu allèges. S'il laisse un trou, tu peux le remplir — ou pas.</p>
+<div class="tip">Les démos jouent walking bass + ride : écoute où tombent les accords, puis reproduis. Ensuite va sur n'importe quelle grille, coupe le piano, et compe UN chorus entier sans jamais répéter le même pattern deux mesures de suite.</div>`,
+    ex:{type:'practice', bpm:110, video:'jazz piano comping rhythms charleston red garland',
+      demos:[
+        {label:'Charleston (1 et le « et » de 2)', lh:'walk', ride:true,
+         rhHits:[[[0,.5],[1.667,1.8]]],
+         prog:[{root:2,t:'m7'},{root:7,t:'dom7'},{root:0,t:'maj7'},{root:9,t:'dom7'}]},
+        {label:'Anticipation (le « et » de 4)', lh:'walk', ride:true,
+         rhHits:[[[3.667,1.2]]],
+         prog:[{root:2,t:'m7'},{root:7,t:'dom7'},{root:0,t:'maj7'},{root:9,t:'dom7'}]},
+        {label:'Mix vivant', lh:'walk', ride:true,
+         rhHits:[[[0,.5],[1.667,1.6]],[[3.667,.4]],[[2,.8]],[[1.667,2]]],
+         prog:[{root:2,t:'m7'},{root:7,t:'dom7'},{root:0,t:'maj7'},{root:9,t:'dom7'}]},
+      ],
+      steps:[
+        ['Charleston pur','Rootless main droite, fondamentale (ou rien) main gauche : Charleston sur un ii–V–I en boucle, 12 tours. Court et sec.'],
+        ['Anticipe','Le même, mais chaque accord arrive sur le « et » de 4 d\'avant. Le changement d\'accord doit surprendre PILE au bon moment.'],
+        ['Mélange','Un chorus entier sur une grille (piano coupé) sans répéter deux mesures identiques. Charleston, anticipation, silence : trois couleurs minimum.'],
+        ['Écoute active','Mets un solo que tu aimes et compe DESSOUS comme si le soliste était en face. Réponds à ses phrases, remplis ses trous.']
+      ]}},
+]},
+{ id:'mf', title:'Module 7 · Les formes', lessons:[
+  { id:'f1', icon:'🎺', title:'Le blues jazz, décodé', sub:'12 mesures, mais pas celles du rock', xp:60,
+    theory:`
+<p>Le blues jazz garde la carrosserie 12 mesures mais change le moteur : des ii–V partout.</p>
+<h3>Le blues en Fa, version jazz</h3>
+<div class="formula">F7 | B♭7 | F7 | Cm7 F7 |<br>B♭7 | B°7 | F7 | Am7 D7 |<br>Gm7 | C7 | F7 D7 | Gm7 C7</div>
+<ul>
+<li><b>Mesure 4</b> : Cm7–F7 = un ii–V vers B♭7. On prépare le IV au lieu d'y tomber.</li>
+<li><b>Mesure 6</b> : B°7, l'accord de passage chromatique entre B♭7 et F7.</li>
+<li><b>Mesure 8</b> : Am7–D7 tire vers Gm7 — l'entrée du ii–V final.</li>
+<li><b>Mesures 9–10</b> : Gm7–C7, LE ii–V du blues jazz (le rock jouerait C7–B♭7).</li>
+<li><b>Mesures 11–12</b> : turnaround F–D7–Gm7–C7 pour relancer.</li>
+</ul>
+<div class="tip">Deux étages d'impro : la gamme blues de Fa passe PARTOUT (l'étage fondation), et le suivi accord par accord (l'étage précision). Les grands alternent les deux dans le même chorus.</div>
+<p>Ta salle d'entraînement : la grille <b>Blues en Fa</b> de l'onglet Grilles, avec la vraie section rythmique.</p>`,
+    ex:{type:'quiz', qs:[
+      {q:'Mesure 4 du blues jazz en Fa, on joue Cm7–F7 parce que…', opts:['C\'est joli','C\'est un ii–V qui prépare B♭7','C\'est le relatif mineur'], a:1,
+       why:'Cm7–F7 = ii–V de B♭. Le jazz ne tombe pas sur un accord : il y est aspiré.'},
+      {q:'La mesure 6 (après B♭7) porte souvent…', opts:['B°7','B♭m7','C7'], a:0,
+       why:'B°7 fait le pont chromatique B♭ → B → (C, la quinte de F). L\'accord de passage type.'},
+      {q:'Les mesures 9–10 du blues jazz en Fa :', opts:['C7 | B♭7','Gm7 | C7','F7 | C7'], a:1,
+       why:'Le ii–V (Gm7–C7) remplace le V–IV du blues rock. C\'est LA signature du blues jazz.'},
+      {q:'Le D7 de la mesure 8 sert à…', opts:['Revenir à F','Tirer vers Gm7 (c\'est son V)','Moduler en Ré'], a:1,
+       why:'D7 = V de G. Il aspire vers le Gm7 de la mesure 9. Encore et toujours des dominantes qui visent.'},
+      {q:'La gamme « passe-partout » sur tout le blues en Fa :', opts:['Fa majeur','Fa blues (F A♭ B♭ B C E♭)','Fa lydien'], a:1,
+       why:'La gamme blues de Fa fonctionne sur les 12 mesures — c\'est l\'étage fondation. L\'étage au-dessus : suivre chaque accord.'}
+    ]}},
+  { id:'f2', icon:'🅰', title:'Rhythm changes', sub:'La 2ᵉ grille la plus jouée du monde', xp:60,
+    theory:`
+<p>« I Got Rhythm », Gershwin, 1930. Les boppers ont gardé la grille, jeté la mélodie, et écrit des centaines de thèmes dessus. En jam, après le blues, c'est LE test : <b>rhythm changes en Si♭</b>.</p>
+<h3>La forme : AABA, 32 mesures</h3>
+<ul>
+<li><b>A</b> (8 mesures) : des turnarounds en Si♭ qui tournent — B♭6 G7 | Cm7 F7 — avec un détour vers le IV (E♭) aux mesures 5-6.</li>
+<li><b>B</b> — le pont : <b>D7 | D7 | G7 | G7 | C7 | C7 | F7 | F7</b>. Quatre dominantes, deux mesures chacune, qui descendent le cycle jusqu'à ramener le A.</li>
+</ul>
+<div class="formula">Le A bouge vite (2 accords/mesure) → pense en ZONES : « Si♭ » 4 mesures, « E♭ » 2, « retour ».<br>Le pont bouge lentement → chaque dominante mérite sa couleur (mixo, puis altère la fin).</div>
+<div class="warn">Erreur classique : vouloir jouer chaque accord du A à 200 BPM. Même les pros pensent la zone, pas la case. Les guides suffisent ; le reste est du paysage.</div>
+<div class="tip">Commence à 120 BPM sur la grille Rhythm Changes de l'onglet Grilles. La vitesse viendra du calme, pas l'inverse.</div>`,
+    ex:{type:'quiz', qs:[
+      {q:'Rhythm changes : la forme ?', opts:['12 mesures','AABA, 32 mesures','ABAC, 16 mesures'], a:1,
+       why:'Quatre sections de 8 : A, A, le pont (B), A. La forme reine des standards.'},
+      {q:'Le A tourne essentiellement sur…', opts:['I–VI–ii–V en Si♭','Un blues en Si♭','ii–V en Ré'], a:0,
+       why:'B♭6–G7–Cm7–F7 : le turnaround en boucle, avec une excursion vers E♭ au milieu.'},
+      {q:'Le pont, c\'est…', opts:['D7 G7 C7 F7, deux mesures chacun','B♭7 E♭7 A♭7 D♭7','Dm7 G7 Cm7 F7'], a:0,
+       why:'Quatre dominantes qui descendent le cycle des quartes jusqu\'à F7… qui est le V de Si♭ : retour au A.'},
+      {q:'D\'où vient la grille ?', opts:['D\'un blues ancien','De « I Got Rhythm » de Gershwin','De Charlie Parker'], a:1,
+       why:'Gershwin, 1930. Grille libre de droits → les boppers ont composé dessus à la chaîne (« Oleo », « Anthropology »…).'},
+      {q:'Sur le A à tempo rapide, la bonne stratégie :', opts:['Jouer chaque accord consciencieusement','Penser en zones et viser les guides','Jouer la gamme de Si♭ en continu'], a:1,
+       why:'2 accords/mesure à 220 BPM ne se « pensent » pas case par case. Zones + guides = le cerveau suit.'}
+    ]}},
+  { id:'f3', icon:'🧭', title:'Lire une grille, tenir la forme', sub:'AABA, chorus, et l\'art de ne jamais se perdre', xp:50,
+    theory:`
+<p>Se perdre dans la forme est LA faute éliminatoire en jam — bien avant la fausse note. Personne ne te suivra : c'est toi qui dois savoir où tu es.</p>
+<h3>Le vocabulaire</h3>
+<ul>
+<li><b>Head</b> : le thème, joué au début et à la fin.</li>
+<li><b>Chorus</b> : UN tour complet de la grille. « Prends deux chorus » = deux tours de solo.</li>
+<li><b>Le pont</b> : le B du AABA — ton meilleur repère auditif, il sonne « ailleurs ».</li>
+<li><b>Trading fours</b> : échange de 4 mesures avec le batteur — impossible si tu ne comptes pas.</li>
+</ul>
+<h3>Les techniques anti-naufrage</h3>
+<ul>
+<li>Pense en <b>blocs de 4 et 8</b>, jamais mesure par mesure.</li>
+<li>Ancre-toi sur les <b>cadences</b> : le ii–V qui ramène le A s'entend, même de loin.</li>
+<li>Perdu ? <b>Continue à comper léger</b>, écoute le bassiste (il joue la fondamentale au 1), attends le pont ou le début de chorus. Ne t'arrête JAMAIS de compter.</li>
+</ul>
+<div class="tip">Entraînement : sur n'importe quelle grille de l'app, annonce à voix haute « pont ! » et « chorus ! » au moment où ils arrivent, sans regarder l'écran. Puis en jouant.</div>`,
+    ex:{type:'quiz', qs:[
+      {q:'Un « chorus », c\'est…', opts:['Le refrain','Un tour complet de la grille','La coda'], a:1,
+       why:'Un solo de 3 chorus sur un blues = 3 × 12 mesures. On compte en tours de grille.'},
+      {q:'Dans AABA, le B s\'appelle…', opts:['Le pont','Le refrain','L\'interlude'], a:0,
+       why:'Le pont (bridge) : 8 mesures qui partent ailleurs — ton meilleur repère auditif dans la forme.'},
+      {q:'Tu te perds en plein solo. Le bon réflexe :', opts:['T\'arrêter et attendre','Comper léger, écouter le bassiste, viser le début de chorus','Jouer plus fort'], a:1,
+       why:'La forme continue sans toi : raccroche-toi aux repères (basse, cadences, pont) sans casser le groove.'},
+      {q:'Le « head », c\'est…', opts:['Le premier accord','Le thème, joué au début et à la fin','Le solo du leader'], a:1,
+       why:'Head → solos (n chorus chacun) → head final. La liturgie du jam, partout dans le monde.'},
+      {q:'Pour ne pas te perdre, tu penses…', opts:['Mesure par mesure','En blocs de 4 et 8 mesures','Note par note'], a:1,
+       why:'La forme s\'architecture en 4+4, 8+8. Ton cerveau doit compter des blocs, tes doigts s\'occupent des notes.'}
+    ]}},
+]},
+{ id:'mx', title:'Module 8 · Le terrain avancé', lessons:[
+  { id:'x1', icon:'🏗', title:'Upper structures', sub:'Une triade majeure posée sur une dominante', xp:90,
+    theory:`
+<p>Tu sais déjà charger une dominante de tensions. Voici la manière dont les pros les <b>entendent</b> et les <b>attrapent</b> instantanément : par <b>triades supérieures</b>. Main gauche = les guides (3 + ♭7). Main droite = une simple <b>triade majeure</b>, celle que tu connais depuis dix ans — mais posée au bon étage.</p>
+<h3>Les trois classiques (sur une dominante de fondamentale X)</h3>
+<div class="formula">Triade du <b>II</b> (un ton au-dessus) → 9 · ♯11 · 13 (le son « clair »)<br>
+Triade du <b>♭VI</b> → ♯9 · ♭13 (le son « altéré », rageur)<br>
+Triade du <b>♭II</b> → ♭9 · 11 · ♭13 (le son « ténébreux »)</div>
+<p>Sur <b>C7</b> : triade de <b>Ré</b> (D F♯ A) = C13♯11. Triade de <b>La♭</b> (A♭ C E♭)... = C7♯9♭13. Tu ne calcules plus cinq tensions : tu poses une triade que tes doigts connaissent par cœur, à la bonne hauteur.</p>
+<div class="tip">Le vrai gain : en solo aussi. Sur un G7 qui va vers C, arpège une triade de Ré (US II) ou de La♭ (US ♭VI) → tu joues « juste out » sans réfléchir. C'est le secret de tonnes de phrases modernes.</div>
+<div class="warn">La règle : la triade se pose AU-DESSUS des guides. En dessous, elle sonne comme un autre accord. C'est l'étage qui fait la tension.</div>`,
+    ex:{type:'chord', items:'upper', hi:84, sub:'Guides (3+♭7) + la triade majeure indiquée, au-dessus.'}},
+  { id:'x2', icon:'🌐', title:'Coltrane changes', sub:'Le cycle des tierces majeures', xp:80,
+    theory:`
+<p>1960, « Giant Steps ». Coltrane remplace le cycle des quartes par un cycle de <b>tierces majeures</b> : trois centres tonals qui divisent l'octave en trois parts égales (par ex. <b>B – G – E♭</b>, à 4 demi-tons d'écart), reliés par leurs dominantes.</p>
+<h3>Le moteur</h3>
+<div class="formula">B(maj7) → D7 → G(maj7) → B♭7 → E♭(maj7) → …<br>Chaque maj7 est précédé de SON V7, et chaque V7 vise le centre suivant, une tierce majeure plus bas.</div>
+<p>Pourquoi c'est un mur : les repères diatoniques sautent toutes les deux mesures. On ne « suit » pas Giant Steps à l'oreille — on le <b>connaît</b>, on a mémorisé les trois centres et les ponts. Les guides restent ton fil : à chaque maj7, vise sa 3 ou sa 7 ; à chaque V7, la 3 est la sensible du centre suivant.</p>
+<div class="tip">Méthode de survie : apprends les trois I (les trois maj7) d'abord, comme trois maisons. Puis les V7 qui y mènent. La grille « Cycle de tierces » de l'onglet Grilles est ton terrain — commence lentement, honteusement lentement.</div>`,
+    ex:{type:'quiz', qs:[
+      {q:'Les Coltrane changes divisent l\'octave en…', opts:['Quartes justes','Tierces majeures (3 centres)','Demi-tons'], a:1,
+       why:'Trois centres à 4 demi-tons d\'écart (ex. B, G, E♭) : la matrice de Giant Steps.'},
+      {q:'Chaque centre est atteint via…', opts:['Son propre V7','Un accord diminué','Un ii–V complet à chaque fois'], a:0,
+       why:'Un V7 pointe chaque nouveau centre (D7→G, B♭7→E♭…). Parfois précédé de son ii, mais le V est l\'essentiel.'},
+      {q:'Pourquoi Giant Steps est si dur à improviser ?', opts:['Le tempo seulement','Les centres tonals changent toutes les 1-2 mesures','Il n\'y a pas d\'accords'], a:1,
+       why:'Aucune inertie diatonique : on doit CONNAÎTRE la carte, l\'oreille seule ne suit pas.'},
+      {q:'Ton fil rouge dans les changes rapides reste…', opts:['La gamme blues','Les guide tones (3 et 7)','La pédale de basse'], a:1,
+       why:'À chaque accord, viser sa 3 ou sa 7 garde ton solo ancré, même quand tout bouge.'},
+      {q:'B, G, E♭ sont espacés de…', opts:['Une quarte','Une tierce majeure','Une tierce mineure'], a:1,
+       why:'B→G = 4 demi-tons (descendant), G→E♭ = 4 demi-tons. La symétrie augmentée.'}
+    ]}},
+  { id:'x3', icon:'🎭', title:'Réharmonisation', sub:'Backdoor, subs et Bird changes', xp:80,
+    theory:`
+<p>Un même endroit d'un morceau peut s'harmoniser de dix façons. Voici les réflexes de réharmonisation qui séparent l'accompagnateur du <b>coloriste</b>.</p>
+<h3>Les outils</h3>
+<ul>
+<li><b>Sub tritonique</b> (revu) : tout V7 → le 7 à un triton. G7 → D♭7.</li>
+<li><b>Backdoor ii–V</b> : pour aller vers Imaj7, emprunte <b>♭VII7</b> (souvent précédé de son ivm7). Vers C : <b>Fm7 – B♭7 – C</b>. Le B♭7 « rentre par derrière ».</li>
+<li><b>Bird changes</b> : farcir un blues de ii–V descendants (le « Blues for Alice »). Chaque temps fort devient une cible de ii–V.</li>
+<li><b>Chaîne de dominantes</b> : reculer en arrière par quartes — E7 → A7 → D7 → G7 → C : chaque dominante résout dans la suivante.</li>
+</ul>
+<div class="formula">Vers Cmaj7, trois routes :<br>Dm7–G7 (avant) · Dm7–D♭7 (sub) · Fm7–B♭7 (backdoor)</div>
+<div class="tip">Exercice mental : sur n'importe quel maj7, demande-toi « par quelles trois portes puis-je y arriver ? ». Le jour où la réponse est immédiate, tu réharmonises en temps réel.</div>`,
+    ex:{type:'quiz', qs:[
+      {q:'Le « backdoor » vers Cmaj7, c\'est…', opts:['Dm7 – G7','Fm7 – B♭7','Em7 – A7'], a:1,
+       why:'♭VII7 (B♭7), souvent précédé de ivm7 (Fm7), résout sur I par « la porte de derrière ».'},
+      {q:'La sub tritonique de A7 :', opts:['E♭7','E7','D7'], a:0,
+       why:'Triton de A = E♭. A7 et E♭7 partagent le tritone C♯/D♭–G.'},
+      {q:'Une « chaîne de dominantes » vers C :', opts:['E7–A7–D7–G7–C','C–G–C–G','Dm7–Em7–Fm7'], a:0,
+       why:'Chaque V7 résout dans le V7 suivant, par quartes, jusqu\'à C. Le son « cycle » de plein de ponts.'},
+      {q:'Les « Bird changes » sur un blues, c\'est…', opts:['Le supprimer les accords','Le farcir de ii–V descendants','Le jouer deux fois plus vite'], a:1,
+       why:'Parker réharmonise le blues (Blues for Alice) en cascades de ii–V : une cible harmonique à chaque temps fort.'},
+      {q:'Pourquoi le backdoor B♭7 marche vers C ?', opts:['Il partage des notes avec G7 (sa 3 = F, sa ♭7 = A♭→sensibles douces)','C\'est le relatif','Par hasard'], a:0,
+       why:'B♭7 contient D et A♭ : D est la 9 de C, A♭ descend chromatiquement sur G. Une résolution plus molle, « gospel ».'},
+      {q:'Réharmoniser, à quoi ça sert d\'abord ?', opts:['Frimer','Colorer et relancer une grille qu\'on a jouée cent fois','Aller plus vite'], a:1,
+       why:'Même morceau, autre lumière : c\'est l\'outil de l\'accompagnateur qui fait lever la tête au soliste.'}
+    ]}},
+  { id:'x4', icon:'🧊', title:'Block chords', sub:'Le son « mains bloquées » de Garner & Shearing', xp:80,
+    theory:`
+<p>Le <b>block chord</b> (ou « locked hands ») : la mélodie est <b>harmonisée à chaque note</b>, les deux mains bougent en bloc, en parallèle. Le son luxuriant d'Erroll Garner, George Shearing, Barry Harris.</p>
+<h3>La technique du 6/diminué (Barry Harris)</h3>
+<p>Sur un accord majeur, alterne <b>l'accord de 6</b> (C6 = C E G A) et un <b>°7</b> une note plus haut, en descendant la gamme. Les notes de la gamme tombent tantôt sur un C6, tantôt sur un D°7 — chaque note de mélodie porte donc un accord complet dessous.</p>
+<div class="formula">Gamme de C harmonisée : C6 · D°7 · C6/E · F°7 ... la mélodie est toujours la note du haut.</div>
+<h3>Le drop-2, l'autre voie</h3>
+<p>Prends un voicing fermé à 4 sons, <b>descends la 2ᵉ voix depuis le haut d'une octave</b> : ça ouvre le son, ça sonne « big band ». Les deux mains le jouent d'un bloc sous chaque note.</p>
+<div class="tip">Écoute la démo (mélodie + bloc sous chaque note), puis au piano : harmonise une gamme descendante en 6/dim, très lentement. C'est de la mécanique — une fois dans les doigts, ça coule.</div>`,
+    ex:{type:'practice', bpm:90, video:'block chords barry harris 6th diminished piano tutorial',
+      demos:[
+        {label:'Gamme de Do en block chords (6/dim)', lh:'root', ride:false,
+         rhHits:[[[0,1],[1,1],[2,1],[3,1]],[[0,1],[1,1],[2,1],[3,1]]],
+         prog:[{root:0,t:'maj6'},{root:0,t:'maj6'}],
+         melody:[{n:72,b:0,d:1},{n:71,b:1,d:1},{n:69,b:2,d:1},{n:67,b:3,d:1},
+                 {n:65,b:4,d:1},{n:64,b:5,d:1},{n:62,b:6,d:1},{n:60,b:7,d:2}]},
+      ],
+      steps:[
+        ['La gamme 6/dim, main droite seule','En Do : descends C6 → D°7 → C6(1er renv.) → F°7… une note de mélodie par accord. Lentement, note du haut = mélodie.'],
+        ['Les deux mains en bloc','Double la note du bas de la main gauche. Les deux mains descendent la gamme ENSEMBLE, en parallèle. Le son Shearing.'],
+        ['Drop-2','Reprends un ii–V–I, joue chaque accord en drop-2 (2ᵉ voix du haut descendue d\'une octave). Compare : plus ouvert, plus « orchestre ».'],
+        ['Sur un standard','Harmonise les 8 premières mesures d\'un thème que tu connais en block chords. C\'est long au début ; c\'est comme ça qu\'on l\'apprend.']
+      ]}},
+  { id:'x5', icon:'🛸', title:'Jouer dehors', sub:'Side-slipping et superposition', xp:90,
+    theory:`
+<p>Le dernier étage : sortir de l'accord <b>exprès</b>, puis rentrer. La dissonance devient un effet dramatique — à condition qu'elle soit <b>encadrée par du dedans</b> et qu'elle <b>résolve</b>.</p>
+<h3>Les procédés</h3>
+<ul>
+<li><b>Side-slipping</b> : joue ta phrase, glisse-la d'un <b>demi-ton</b> (tout monte d'un cran), puis reviens. Le « dedans → dehors → dedans » de Michael Brecker.</li>
+<li><b>Superposition</b> : sur un accord statique (un vamp modal), plaque une structure d'une <b>autre</b> tonalité par-dessus (une triade lointaine, une pentatonique décalée).</li>
+<li><b>Pentatonique décalée</b> : sur C, la penta de B ou de F♯ crée un « out » contrôlé et symétrique.</li>
+</ul>
+<div class="formula">Recette : 1 mesure DEDANS → ½ mesure DEHORS (side-slip) → résolution DEDANS<br>La tension n'a de sens que par le retour.</div>
+<div class="warn">« Out » sans retour = faux. La différence entre l'avant-garde et l'erreur, c'est la résolution — et le fait de le faire avec conviction, pas par accident.</div>
+<div class="tip">Écoute la démo : la phrase se joue in, se décale +1 demi-ton, puis retombe sur la 3. Fais-la sur le vamp Modal (onglet Grilles) : là où l'harmonie ne bouge pas, tu as tout l'espace pour oser.</div>`,
+    ex:{type:'practice', bpm:120, video:'side slipping outside playing jazz improvisation',
+      demos:[
+        {label:'Dedans → dehors → dedans (sur Dm7)', lh:'root', ride:true,
+         prog:[{root:2,t:'m7'},{root:2,t:'m7'},{root:2,t:'m7'},{root:2,t:'m7'}],
+         melody:[{n:62,b:0,d:.5},{n:65,b:.5,d:.5},{n:69,b:1,d:.5},{n:72,b:1.5,d:.5},
+                 {n:63,b:2,d:.5},{n:66,b:2.5,d:.5},{n:70,b:3,d:.5},{n:73,b:3.5,d:.5},
+                 {n:62,b:4,d:.5},{n:65,b:4.5,d:.5},{n:69,b:5,d:.5},{n:65,b:5.5,d:.5},
+                 {n:65,b:6,d:2}]},
+      ],
+      steps:[
+        ['Une cellule, dedans','Sur le vamp Modal (Ré dorien), choisis une phrase de 4 notes bien DANS l\'accord. Répète-la, cale-la.'],
+        ['Side-slip','Rejoue-la un demi-ton plus haut (tout monte d\'un cran). Sens la tension. Reste-y une mesure, pas plus.'],
+        ['Résous','Retombe sur la phrase d\'origine, ou mieux : sur la 3 (F) de Dm7. Le « dehors » n\'existe que par ce retour.'],
+        ['Pentatonique lointaine','Sur le même vamp, essaie la penta de Mi♭ ou de Si par-dessus : un « out » symétrique, plus facile à contrôler qu\'il n\'en a l\'air.']
+      ]}},
+]},
+];
+const ALL_LESSONS=CURRICULUM.flatMap(m=>m.lessons);
+const REPS={a1:2,a2:2,a3:1,v1:2,v2:3,v3:3,v4:2,c1:3,c2:3,c3:2,s1:2,s2:2,s3:3,i1:3,i2:3,i3:4,i4:3,i5:4,r1:3,r2:3,f1:2,f2:2,f3:2,
+  x1:3,x2:2,x3:2,x4:3,x5:3};
+
+/* ================================================================
+   GÉNÉRATEURS D'EXERCICES
+   ================================================================ */
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function mkq(q,good,others,why){
+  const opts=[good,...others].sort(()=>Math.random()-.5);
+  return {q,opts,a:opts.indexOf(good),why};
+}
+function genChordItems(gen){
+  const items=[], used=new Set();
+  while(items.length<gen.count){
+    const root=pick(gen.roots), t=pick(gen.types);
+    const k=root+t; if(used.has(k)) continue; used.add(k);
+    items.push({root,t});
+  }
+  return items;
+}
+function genShellItems(n){
+  const items=[], used=new Set();
+  while(items.length<n){
+    const root=Math.floor(Math.random()*12), t=pick(['m7','dom7','maj7']);
+    const k=root+t; if(used.has(k)) continue; used.add(k);
+    const iv=SHELL(t), b=48+root;
+    items.push({root,t, iv, label:chordName(root,t)+' · shell',
+      notesTxt:iv.map(x=>NOTE[(root+x)%12]).join(' – ')+' (1–3–7)',
+      msg1:'✗ Shell = fondamentale + 3 + 7. La quinte reste au vestiaire.',
+      hint:iv.map(x=>b+x)});
+  }
+  return items;
+}
+function genRootlessItems(n,form){
+  const REG=form==='B'?RLB:RLA, types=Object.keys(form==='B'?RLB:{m7:1,dom7:1,maj7:1});
+  const items=[], used=new Set();
+  while(items.length<n){
+    const root=Math.floor(Math.random()*12), t=pick(types);
+    const k=root+t; if(used.has(k)) continue; used.add(k);
+    const iv=REG[t];
+    const bottomPc=(root+iv[0])%12, b=50+((bottomPc-50)%12+12)%12;
+    items.push({root,t, iv, label:chordName(root,t)+' · rootless '+form,
+      notesTxt:iv.map(x=>NOTE[(root+x)%12]).join(' – ')+' (sans fondamentale)',
+      msg1:'✗ Pas de fondamentale ! Forme '+form+' : '+(form==='A'?'depuis la 3':'depuis la 7')+', avec la 9.',
+      hint:iv.map(x=>b+(x-iv[0]))});
+  }
+  return items;
+}
+function genUpperItems(n){
+  const items=[], used=new Set(), keys=['II','bVI','bII'];
+  while(items.length<n){
+    const root=Math.floor(Math.random()*12), uk=pick(keys), u=US[uk];
+    const key=root+'.'+uk; if(used.has(key)) continue; used.add(key);
+    const iv=u.iv, bottomPc=(root+iv[0])%12, b=52+((bottomPc-52)%12+12)%12;
+    items.push({root, t:'dom7', iv,
+      label:NOTE[root]+'7 · triade de '+NOTE[(root+u.off)%12],
+      notesTxt:iv.map(x=>NOTE[(root+x)%12]).join(' – ')+' ('+u.tag+')',
+      msg1:'✗ Guides '+NOTE[(root+4)%12]+' + '+NOTE[(root+10)%12]+', puis la triade majeure de '+NOTE[(root+u.off)%12]+' au-dessus.',
+      hint:iv.map(x=>b+(x-iv[0]))});
+  }
+  return items;
+}
+function genSoWhatItems(n){
+  const items=[], used=new Set();
+  while(items.length<n){
+    const root=Math.floor(Math.random()*12);
+    if(used.has(root)) continue; used.add(root);
+    const b=48+root;
+    items.push({root, t:'m7', iv:SOWHAT, label:'So What sur '+NOTE[root],
+      notesTxt:SOWHAT.map(x=>NOTE[(root+x)%12]).join(' – ')+' (4te·4te·4te·3ce)',
+      msg1:'✗ Trois quartes justes (+5) puis une tierce majeure (+4), depuis '+NOTE[root]+'.',
+      hint:SOWHAT.map(x=>b+x)});
+  }
+  return items;
+}
+function abChords(){
+  const out=[];
+  [[0,'Do'],[10,'Si♭']].forEach(([k])=>{
+    const ii=(k+2)%12, V=(k+7)%12;
+    out.push({root:ii,t:'m7', iv:RLA.m7,  label:chordName(ii,'m7')+' · A'});
+    out.push({root:V, t:'dom7', iv:RLB.dom7, label:chordName(V,'dom7')+' · B'});
+    out.push({root:k, t:'maj7', iv:RLA.maj7, label:chordName(k,'maj7')+' · A'});
+  });
+  return out;
+}
+const BLUESF_FLAT=[[5,'dom7'],[10,'dom7'],[5,'dom7'],[0,'m7'],[5,'dom7'],[10,'dom7'],[11,'dim7'],[5,'dom7'],
+  [9,'m7'],[2,'dom7'],[7,'m7'],[0,'dom7'],[5,'dom7'],[2,'dom7'],[7,'m7'],[0,'dom7']].map(([r,t])=>({root:r,t}));
+function resolveEx(ex){
+  const e={...ex};
+  if(e.type==='chord'){
+    if(e.items==='shells') e.items=genShellItems(8);
+    else if(e.items==='rootlessA') e.items=genRootlessItems(6,'A');
+    else if(e.items==='sowhat') e.items=genSoWhatItems(5);
+    else if(e.items==='upper') e.items=genUpperItems(6);
+  }
+  if(e.type==='prog'){
+    if(e.items==='rootlessAB'){ e.chords=abChords(); e.rounds=1; e.free=true; e.exact=true; delete e.items; }
+    else if(e.items==='cycleiiVI'){
+      const st=Math.floor(Math.random()*12); e.chords=[];
+      for(let i=0;i<4;i++) e.chords.push(...iiVI(CYCLE[(st+i)%12]));
+      e.rounds=1; e.free=true; delete e.items;
+    }
+    else if(e.items==='cycleiiVIm'){
+      e.chords=[]; const ks=[2,9,7,0,4].sort(()=>Math.random()-.5).slice(0,2);
+      ks.forEach(k=>e.chords.push(...iiVIm(k)));
+      e.rounds=1; e.free=true; delete e.items;
+    }
+  }
+  if(e.type==='scale'){
+    if(e.items==='bebop'){ const r=pick([7,0,5,10]); Object.assign(e,{root:r,pattern:[...SCALES.bebop.p,12],name:NOTE[r]+' bebop dominante',sub:'Mixolydien + 7M de passage. Commence dans le grave.'}); delete e.items; }
+    else if(e.items==='alt'){ const r=pick([7,0,2,9]); Object.assign(e,{root:r,pattern:[...SCALES.alt.p,12],name:NOTE[r]+' altérée',sub:'1 ♭9 ♯9 3 ♯11 ♭13 ♭7 — que de la tension. Commence dans le grave.'}); delete e.items; }
+  }
+  if(e.type==='guide'){
+    if(e.items==='bluesF'){ e.chords=BLUESF_FLAT; delete e.items; }
+  }
+  return e;
+}
+function genCSQs(n){
+  const qs=[], keys=[0,2,3,5,7,9,10];
+  while(qs.length<n){
+    const k=pick(keys), ii=(k+2)%12, V=(k+7)%12, x=pick(keys);
+    const t=Math.floor(Math.random()*6);
+    if(t===0) qs.push(mkq(`Dans un ii–V–I en ${NOTE[k]}, sur ${NOTE[ii]}m7 tu penses…`,
+      NOTE[ii]+' dorien',[NOTE[ii]+' éolien',NOTE[ii]+' mixolydien'],
+      `Le ii porte le dorien : les notes de ${NOTE[k]} majeur, centrées sur ${NOTE[ii]}.`));
+    else if(t===1) qs.push(mkq(`Sur ${NOTE[V]}7 (V de ${NOTE[k]}), la gamme de base :`,
+      NOTE[V]+' mixolydien',[NOTE[V]+' majeur',NOTE[V]+' dorien'],
+      `Dominante → mixolydien : majeur + ♭7 (la guide).`));
+    else if(t===2) qs.push(mkq(`Tension maximale sur ${NOTE[V]}7 juste avant ${NOTE[k]}maj7 :`,
+      NOTE[V]+' altérée',[NOTE[V]+' mixolydien',NOTE[V]+' lydien'],
+      `L'altérée (♭9 ♯9 ♯11 ♭13) charge le V à bloc — à condition de résoudre sur le I.`));
+    else if(t===3) qs.push(mkq(`Sur ${NOTE[x]}m7♭5 :`,
+      NOTE[x]+' locrien',[NOTE[x]+' dorien',NOTE[x]+' éolien'],
+      `Le ø7 est le ii du mineur : mode locrien (♭2 et ♭5 incluses).`));
+    else if(t===4) qs.push(mkq(`Sur ${NOTE[x]}7♭9 :`,
+      NOTE[x]+' dim ½ton/ton',[NOTE[x]+' dim ton/½ton',NOTE[x]+' mixolydien'],
+      `La diminuée demi-ton/ton contient ♭9, ♯9, ♯11 et 13 : la gamme du 7♭9.`));
+    else qs.push(mkq(`La couleur ♯11 sur ${NOTE[k]}maj7 vient de…`,
+      NOTE[k]+' lydien',[NOTE[k]+' ionien',NOTE[k]+' mixolydien'],
+      `Lydien = majeur à ♯4. Sur un maj7, ce ♯11 sonne ouvert, moderne.`));
+  }
+  return qs;
+}
+
+/* ================================================================
+   VUES — Parcours
+   ================================================================ */
+const main=document.getElementById('main');
+let tab='parcours';
+function render(){ ({parcours:renderParcours,jam:renderJam,grilles:renderGrilles,outils:renderOutils})[tab](); }
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  tab=b.dataset.tab;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));
+  render();
+});
+function renderParcours(){
+  const lv=levelOf(S.xp);
+  const pct=lv.next?Math.round((S.xp-lv.base)/(lv.next[0]-lv.base)*100):100;
+  main.innerHTML='';
+  const hero=document.createElement('div'); hero.className='card hero';
+  hero.innerHTML=`<div class="lvl">Ta scène actuelle</div>
+    <div class="lvlname">${lv.name}</div>
+    <div class="xpbar"><i style="width:${pct}%"></i></div>
+    <div class="xptxt">${S.xp} XP${lv.next?` · prochaine scène : ${lv.next[1]} à ${lv.next[0]} XP`:' · tu es la légende'}</div>`;
+  main.appendChild(hero);
+
+  if(S.bilan){
+    const lv=bilanLevel(S.bilan.global);
+    const bc=document.createElement('div'); bc.className='card';
+    bc.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center">
+      <b style="font-size:15px">🎓 Bilan · ${lv.tag} ${lv.name}</b>
+      <span style="color:var(--acc);font-weight:800">${S.bilan.global}/100</span></div>
+      <p style="color:var(--dim);font-size:12px;margin:4px 0 0">${lv.reco}</p>`;
+    const rb=document.createElement('button'); rb.className='btn ghost'; rb.textContent='↻ Refaire le bilan';
+    rb.onclick=()=>runBilan();
+    bc.appendChild(rb); main.appendChild(bc);
+  } else {
+    const bc=document.createElement('div'); bc.className='card hero';
+    bc.innerHTML=`<b style="font-size:15px">🎓 Fais ton bilan, ${USER}</b>
+      <p style="color:var(--dim);font-size:13px;margin:4px 0 0">Cinq épreuves, ~5 min, pour situer ton niveau et savoir par où commencer.</p>`;
+    const rb=document.createElement('button'); rb.className='btn'; rb.textContent='🎯 Lancer le bilan';
+    rb.onclick=()=>runBilan();
+    bc.appendChild(rb); main.appendChild(bc);
+  }
+
+  const d=ensureDaily();
+  const daily=document.createElement('div'); daily.className='card daily';
+  const items=['🎼 Un palier de leçon','🎷 Une salle de jam','🥁 Un chorus sur une grille'];
+  daily.innerHTML=`<b style="font-size:15px">📅 Le set du jour</b>`+
+    items.map((t,i)=>`<div class="row${d.done[i]?' ok':''}"><div class="st">${d.done[i]?'✓':'·'}</div><span>${t}</span></div>`).join('')+
+    `<div class="bonus">${d.bonus?'Set bouclé · +30 XP encaissés':'Les trois = +30 XP. Un pro joue tous les jours.'}</div>`;
+  main.appendChild(daily);
+
+  let unlocked=true;
+  CURRICULUM.forEach(mod=>{
+    const md=document.createElement('div'); md.className='mod';
+    md.innerHTML=`<h2>${mod.title}</h2>`;
+    mod.lessons.forEach(l=>{
+      const done=!!S.done[l.id];
+      const reps=lessonReps(l), p=progOf(l.id), wip=!done&&p.n>0;
+      const today=palierTakenToday(l.id);
+      const el=document.createElement('div');
+      el.className='lesson'+(done?' done':'')+(unlocked||done?'':' locked');
+      const sub=done?l.sub : wip?`Palier ${p.n}/${reps}${today?' · repos jusqu\'à demain':' · un palier t\'attend'}` : l.sub;
+      const right=done?'✓ '+l.xp : wip?`<span style="color:${today?'var(--dim)':'var(--acc)'}">${p.n}/${reps}</span>` : l.xp+' XP';
+      el.innerHTML=`<div class="ico">${done?'✓':l.icon}</div>
+        <div class="t"><b>${l.title}</b><small>${sub}</small></div>
+        <div class="xp">${right}</div>`;
+      el.onclick=()=>openLesson(l);
+      md.appendChild(el);
+      if(!done) unlocked=false;
+    });
+    main.appendChild(md);
+  });
+}
+
+/* ================================================================
+   VUES — Jam (salles d'entraînement)
+   ================================================================ */
+const DRILLS=[
+  {id:'set', icon:'🔥', title:'LE SET MIXTE', req:'a1',
+   desc:()=>'Un peu de tout ce que tu as débloqué, enchaîné sans pause. Grossit à chaque leçon maîtrisée. +25 XP.',
+   run:()=>jamMix()},
+  {id:'sp', icon:'⚡', title:'Sprint des espèces', req:'a1',
+   desc:()=>'10 accords, toutes espèces, chrono.'+(S.best.sp?` Record sans faute : <b style="color:var(--acc)">${S.best.sp}s</b>.`:' Pose un sans-faute pour ouvrir le compteur.'),
+   run:()=>jamSprint()},
+  {id:'shell', icon:'🐚', title:'Shells chrono', req:'v1',
+   desc:()=>'8 shells 1–3–7 au hasard.'+(S.best.shell?` Record : <b style="color:var(--acc)">${S.best.shell}s</b>.`:''),
+   run:()=>jamShell()},
+  {id:'rl', icon:'🎩', title:'Roulette rootless', req:'v2',
+   desc:()=>'8 voicings sans fondamentale, forme A ou B.'+(S.best.rl?` Record : <b style="color:var(--acc)">${S.best.rl}s</b>.`:''),
+   run:()=>jamRootless()},
+  {id:'iiv', icon:'🧭', title:'ii–V–I express', req:'c1',
+   desc:()=>'Trois tonalités tirées au sort, majeur ou mineur selon ton niveau. Enchaîne.',
+   run:()=>jamIIVI()},
+  {id:'turn', icon:'↩️', title:'Turnaround roulette', req:'c3',
+   desc:()=>'I–VI–ii–V dans une tonalité au sort — parfois avec substitutions tritoniques. Reste vif.',
+   run:()=>jamTurn()},
+  {id:'guide', icon:'🎯', title:'La ligne des guides', req:'i1',
+   desc:()=>'3 et 7 de chaque accord, sur une grille tirée au sort.'+(S.best.guide?` Record : <b style="color:var(--acc)">${S.best.guide}s</b>.`:''),
+   run:()=>jamGuide()},
+  {id:'cs', icon:'🗺', title:'Quiz chord-scales', req:'s1',
+   desc:()=>'Quel son sur quel accord — questions générées à l\'infini.',
+   run:()=>jamCS()},
+  {id:'us', icon:'🏗', title:'Upper structures', req:'x1',
+   desc:()=>'Guides + triade majeure sur des dominantes tirées au sort.'+(S.best.us?` Record : <b style="color:var(--acc)">${S.best.us}s</b>.`:' Le voicing des modernes.'),
+   run:()=>jamUpper()},
+  {id:'coltrane', icon:'🌐', title:'Coltrane express', req:'x2',
+   desc:()=>'Le cycle des tierces majeures, à construire accord par accord. Le mur, en petites briques.',
+   run:()=>jamColtrane()},
+  {id:'altear', icon:'🔥', title:'Dominantes altérées à l\'oreille', req:'a2',
+   desc:()=>'7 · 9 · 7♭9 · 7♯5 · 13 — distingue les couleurs de tension. Le niveau expert de l\'oreille.',
+   run:()=>jamAltEar()},
+  {id:'ear', icon:'👂', title:'L\'oreille du sideman', req:null,
+   desc:()=>'Espèces, tensions, dominantes altérées : reconnais-les à l\'aveugle.'+(S.earBest?` Record : <b style="color:var(--acc)">${S.earBest}/10</b>.`:''),
+   run:()=>jamEar()},
+];
+const lessonById=id=>ALL_LESSONS.find(l=>l.id===id);
+const moduleOf=l=>CURRICULUM.find(m=>m.lessons.includes(l));
+function renderJam(){
+  const nOpen=DRILLS.filter(d=>!d.req||S.done[d.req]).length;
+  main.innerHTML=`<h1 class="page">La jam</h1>
+  <p style="color:var(--dim);font-size:14px;margin:-6px 0 14px">Entraînement illimité, +10 XP par série. <b style="color:var(--acc)">${nOpen}/${DRILLS.length} salles ouvertes</b> — le parcours débloque le reste.</p>`;
+  DRILLS.forEach(dr=>{
+    const open=!dr.req||S.done[dr.req];
+    const c=document.createElement('div'); c.className='card';
+    if(open){
+      c.innerHTML=`<b style="font-size:16px">${dr.icon} ${dr.title}</b><p style="color:var(--dim);font-size:13px;margin:4px 0 0">${dr.desc()}</p>`;
+      const b=document.createElement('button'); b.className='btn ghost'; b.textContent='Lancer';
+      b.onclick=dr.run; c.appendChild(b);
+    } else {
+      const l=lessonById(dr.req);
+      c.style.opacity=.45;
+      c.innerHTML=`<b style="font-size:16px">🔒 ${dr.title}</b>
+        <p style="color:var(--dim);font-size:13px;margin:4px 0 0">Se débloque en maîtrisant « ${l.title} » (${moduleOf(l).title}).</p>`;
+    }
+    main.appendChild(c);
+  });
+}
+function chronoWrap(inner,close,ex,recKey,daily0){
+  const t0=Date.now();
+  runChord(inner,ex,(ok,score,failed)=>{
+    if(ok){
+      const secs=Math.round((Date.now()-t0)/1000);
+      dailyMark(1); award(10);
+      let msg=`+10 XP · ${secs}s`;
+      if(!failed && recKey && (!S.best[recKey]||secs<S.best[recKey])){ S.best[recKey]=secs; save(); msg+=' · 🏆 RECORD'; }
+      toast(msg);
+    }
+    close();
+  });
+}
+function jamSprint(){
+  openCustom('⚡ Sprint des espèces',(inner,close)=>{
+    const types=S.done.a2?['maj7','dom7','m7','m7b5','dim7','dom9','m9','dom7b9']:['maj7','dom7','m7','m7b5','dim7'];
+    chronoWrap(inner,close,{gen:{types,roots:R12,count:10},sub:'10 accords chronométrés. Construis, vite.'},'sp');
+  });
+}
+function jamShell(){
+  openCustom('🐚 Shells chrono',(inner,close)=>{
+    chronoWrap(inner,close,{items:genShellItems(8),sub:'1–3–7, rien d\'autre. La quinte au vestiaire.'},'shell');
+  });
+}
+function jamRootless(){
+  openCustom('🎩 Roulette rootless',(inner,close)=>{
+    if(S.done.v3){
+      const b1=document.createElement('button'); b1.className='btn ghost'; b1.textContent='Forme A';
+      const b2=document.createElement('button'); b2.className='btn ghost'; b2.textContent='Forme B';
+      const b3=document.createElement('button'); b3.className='btn ghost'; b3.textContent='A et B mélangées';
+      const go=items=>{ inner.innerHTML=''; chronoWrap(inner,close,{items,sub:'Sans fondamentale. La 9 en fait partie.'},'rl'); };
+      b1.onclick=()=>go(genRootlessItems(8,'A'));
+      b2.onclick=()=>go(genRootlessItems(8,'B'));
+      b3.onclick=()=>go([...genRootlessItems(4,'A'),...genRootlessItems(4,'B')].sort(()=>Math.random()-.5));
+      inner.appendChild(b1); inner.appendChild(b2); inner.appendChild(b3);
+    } else {
+      chronoWrap(inner,close,{items:genRootlessItems(8,'A'),sub:'Forme A. Sans fondamentale, avec la 9.'},'rl');
+    }
+  });
+}
+function jamIIVI(){
+  const minor=S.done.c2 && Math.random()<.4;
+  const chords=[];
+  if(minor){ [2,9,7,0,4].sort(()=>Math.random()-.5).slice(0,3).forEach(k=>chords.push(...iiVIm(k))); }
+  else { const st=Math.floor(Math.random()*12); for(let i=0;i<3;i++) chords.push(...iiVI(CYCLE[(st+i)%12])); }
+  openCustom('🧭 ii–V–I express'+(minor?' (mineur)':''),(inner,close)=>{
+    runProg(inner,{rounds:1,free:true,chords,sub:minor?'iiø7 → V7♭9 → im6, trois tonalités.':'Trois tonalités du cycle. Voicing libre.'},
+      ok=>{ if(ok){ dailyMark(1); award(10); toast('+10 XP'); } close(); });
+  });
+}
+function jamTurn(){
+  const k=Math.floor(Math.random()*12);
+  const sub=S.done.c3&&Math.random()<.5;
+  const chords= sub
+    ? [{root:k,t:'maj7'},{root:(k+3)%12,t:'dom7'},{root:(k+2)%12,t:'m7'},{root:(k+1)%12,t:'dom7'}]
+    : [{root:k,t:'maj7'},{root:(k+9)%12,t:'dom7'},{root:(k+2)%12,t:'m7'},{root:(k+7)%12,t:'dom7'}];
+  openCustom(`↩️ Turnaround en ${NOTE[k]}${sub?' (subs tritoniques)':''}`,(inner,close)=>{
+    runProg(inner,{rounds:2,free:true,chords,sub:sub?'I – ♭III7 – ii – ♭II7 : la basse descend chromatiquement.':'I – VI7 – ii – V7. Deux tours.'},
+      ok=>{ if(ok){ dailyMark(1); award(10); toast('+10 XP'); } close(); });
+  });
+}
+function jamGuide(){
+  const pool=[['Blues en Fa',BLUESF_FLAT]];
+  { const st=Math.floor(Math.random()*12), ch=[]; for(let i=0;i<3;i++) ch.push(...iiVI(CYCLE[(st+i)%12])); pool.push(['ii–V–I ×3',ch]); }
+  { const k=Math.floor(Math.random()*12); pool.push([`Turnaround en ${NOTE[k]} ×2`,
+      [{root:k,t:'maj7'},{root:(k+9)%12,t:'dom7'},{root:(k+2)%12,t:'m7'},{root:(k+7)%12,t:'dom7'},
+       {root:k,t:'maj7'},{root:(k+9)%12,t:'dom7'},{root:(k+2)%12,t:'m7'},{root:(k+7)%12,t:'dom7'}]]); }
+  const [name,chords]=pick(pool);
+  openCustom('🎯 La ligne des guides',(inner,close)=>{
+    const t0=Date.now();
+    runGuide(inner,{chords,sub:name+' — la 3 et la 7 de chaque accord.'},(ok,wrong)=>{
+      if(ok){
+        const secs=Math.round((Date.now()-t0)/1000);
+        dailyMark(1); award(10);
+        let msg=`+10 XP · ${secs}s`;
+        if(!wrong && (!S.best.guide||secs<S.best.guide)){ S.best.guide=secs; save(); msg+=' · 🏆 RECORD'; }
+        toast(msg);
+      }
+      close();
+    });
+  });
+}
+function jamCS(){
+  openCustom('🗺 Quiz chord-scales',(inner,close)=>{
+    runQuiz(inner,{qs:genCSQs(6)},ok=>{ if(ok){ dailyMark(1); award(10); toast('+10 XP'); } close(); });
+  });
+}
+function jamUpper(){
+  openCustom('🏗 Upper structures',(inner,close)=>{
+    chronoWrap(inner,close,{items:genUpperItems(6),hi:84,sub:'Guides + triade majeure au-dessus. Le son moderne.'},'us');
+  });
+}
+function coltraneCycle(){
+  let center=pick([11,7,3,0,8,4]); const c=[];
+  for(let i=0;i<3;i++){
+    c.push({root:center,t:'maj7'});
+    const nextC=(center+8)%12;
+    c.push({root:(nextC+7)%12,t:'dom7'});
+    center=nextC;
+  }
+  c.push({root:center,t:'maj7'});
+  return c;
+}
+function jamColtrane(){
+  openCustom('🌐 Coltrane express',(inner,close)=>{
+    runProg(inner,{rounds:1,free:true,chords:coltraneCycle(),sub:'Cycle de tierces majeures : maj7 → V du centre suivant. Construis, ne devine pas.'},
+      ok=>{ if(ok){ dailyMark(1); award(10); toast('+10 XP'); } close(); });
+  });
+}
+function jamAltEar(){
+  openCustom('🔥 Dominantes altérées',(inner,close)=>{
+    runEar(inner,{kinds:['dom7','dom9','dom7b9','dom7s5','maj6'],count:10,pass:0,
+      sub:'Toutes bâties sur une dominante (ou presque). Écoute l\'étage du haut : ♭9 mord, ♯5 flotte, 13 brille.'},
+      (ok,sc)=>{ if(sc>S.earBest){S.earBest=sc;save();} dailyMark(1); award(10); toast(`+10 XP · ${sc}/10`); close(); });
+  });
+}
+function jamEar(){
+  openCustom('👂 L\'oreille du sideman',(inner,close)=>{
+    const menu=document.createElement('div');
+    menu.innerHTML=`<p style="color:var(--dim);font-size:14px;margin-bottom:12px">À l'aveugle : l'app joue, tu nommes. L'oreille progresse en dormant — à condition de la coucher fatiguée.</p>`;
+    inner.appendChild(menu);
+    const lvl=(title,desc,fn)=>{
+      const c=document.createElement('div'); c.className='card';
+      c.innerHTML=`<b style="font-size:15px">${title}</b><p style="color:var(--dim);font-size:13px;margin:4px 0 0">${desc}</p>`;
+      const b=document.createElement('button'); b.className='btn ghost'; b.textContent='Lancer'; b.onclick=fn; c.appendChild(b);
+      menu.appendChild(c);
+    };
+    const start=cfg=>{ menu.remove();
+      runEar(inner,{...cfg,pass:0},(ok,sc)=>{ if(sc>S.earBest){S.earBest=sc;save();} dailyMark(1); award(10); toast(`+10 XP · ${sc}/${cfg.count}`); close(); });
+    };
+    lvl('① Les trois piliers','maj7 / m7 / 7 — les trois couleurs de base, plaquées.',
+      ()=>start({kinds:['maj7','m7','dom7'],count:10,sub:'Repos, mouvement ou tension ?'}));
+    lvl('② Les cinq espèces','+ ø7 et °7. Les deux sombres se ressemblent — c\'est le but.',
+      ()=>start({kinds:['maj7','m7','dom7','m7b5','dim7'],count:10,sub:'ø7 = m7 à quinte baissée · °7 = tout en tierces mineures.'}));
+    lvl('③ La loupe des dominantes','7 / 9 / 7♭9 — même famille, trois degrés de piment.',
+      ()=>start({kinds:['dom7','dom9','dom7b9'],count:10,sub:'Écoute l\'étage du haut.'}));
+    lvl('④ Les ambigus','maj7 / 6 / m6 / m7 — les couleurs douces qui se confondent.',
+      ()=>start({kinds:['maj7','maj6','m6','m7'],count:10,sub:'La 6 ou la 7 ? Majeur ou mineur ?'}));
+  });
+}
+/* set mixte */
+function mixSegments(){
+  const segs=[];
+  segs.push(['Espèces','chord',{gen:{types:['maj7','dom7','m7','m7b5','dim7'],roots:R12,count:3},sub:'Construis, vite.'}]);
+  if(S.done.v1) segs.push(['Shells','chord',{items:genShellItems(3),sub:'1–3–7.'}]);
+  if(S.done.v2) segs.push(['Rootless','chord',{items:genRootlessItems(3,'A'),sub:'Forme A, sans fondamentale.'}]);
+  if(S.done.c1){ const k=CYCLE[Math.floor(Math.random()*12)];
+    segs.push(['ii–V–I','prog',{rounds:1,free:true,chords:iiVI(k),sub:'En '+NOTE[k]+'. Voicing libre.'}]); }
+  if(S.done.s1) segs.push(['Chord-scales','quiz',{qs:genCSQs(3)}]);
+  if(S.done.i1){ const st=Math.floor(Math.random()*12);
+    segs.push(['Guides','guide',{chords:iiVI(CYCLE[st]).concat(iiVI(CYCLE[(st+1)%12])),sub:'3 + 7 de chaque accord.'}]); }
+  segs.push(['Oreille','ear',{kinds:S.done.a2?['dom7','dom9','dom7b9']:['maj7','m7','dom7'],count:3,pass:0,sub:'Écoute avant de cliquer.'}]);
+  return segs;
+}
+function jamMix(){
+  const segs=mixSegments();
+  openCustom('🔥 Le set mixte',(inner,close)=>{
+    const runners={quiz:runQuiz,chord:runChord,prog:runProg,scale:runScale,ear:runEar,guide:runGuide};
+    let k=0;
+    const step=()=>{
+      inner.querySelectorAll('.mixseg').forEach(x=>x.remove());
+      if(k>=segs.length){
+        const d=document.createElement('div'); d.className='mixseg';
+        d.innerHTML=`<div class="exhead"><div class="target">🔥</div>
+          <div class="sub">Set bouclé — ${segs.length} discipline${segs.length>1?'s':''}. Il grossira à chaque leçon maîtrisée.</div></div>`;
+        inner.appendChild(d);
+        dailyMark(1); award(25); toast('+25 XP · set mixte');
+        setTimeout(close,1600); return;
+      }
+      const [name,type,ex]=segs[k];
+      const d=document.createElement('div'); d.className='mixseg';
+      d.innerHTML=`<p style="text-align:center;color:var(--acc);font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px">Partie ${k+1}/${segs.length} — ${name}</p>`;
+      const exDiv=document.createElement('div'); d.appendChild(exDiv);
+      inner.appendChild(d);
+      runners[type](exDiv,ex,()=>{ k++; step(); });
+    };
+    step();
+  });
+}
+
+/* ================================================================
+   VUES — Outils
+   ================================================================ */
+function renderOutils(){
+  main.innerHTML=`<h1 class="page">Outils</h1>`;
+  const c1=document.createElement('div'); c1.className='card';
+  c1.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center">
+    <b style="font-size:16px">🎹 Clavier libre</b>
+    <div class="tag" id="lbltog" style="padding:6px 12px;border-radius:16px;background:${S.labels?'var(--acc)':'var(--bg3)'};color:${S.labels?'#1a1200':'var(--txt)'};border:1px solid var(--line);font-size:12px;font-weight:700;cursor:pointer">Aa noms</div>
+  </div>
+  <p style="color:var(--dim);font-size:13px;margin:4px 0 8px">Pour chercher un voicing, vérifier une idée.</p>`;
+  const kb=buildKeyboard(48,79,(m,k)=>{ playNote(m); k.classList.add('flash'); setTimeout(()=>k.classList.remove('flash'),200); });
+  c1.appendChild(kb); main.appendChild(c1);
+  c1.querySelector('#lbltog').onclick=()=>{ S.labels=!S.labels; save(); renderOutils(); };
+
+  const c2=document.createElement('div'); c2.className='card';
+  c2.innerHTML=`<b style="font-size:16px">🕰 Métronome</b>
+  <p style="color:var(--dim);font-size:13px;margin:4px 0 0">Le mode <b style="color:var(--acc)">2&4</b> claque comme le charleston d'un batteur. C'est LE réglage de travail du jazzman.</p>`;
+  c2.appendChild(metroWidget(Metro.bpm)); main.appendChild(c2);
+
+  const c3=document.createElement('div'); c3.className='card';
+  c3.innerHTML=`<b style="font-size:16px">📋 Aide-mémoire</b>
+  <div class="cheat" style="margin-top:8px">
+    <div class="row"><b>Shell</b> : 1–3–7 (la quinte au vestiaire)</div>
+    <div class="row"><b>Rootless A</b> : 3-5-7-9 (m7, maj7) · 3-13-7-9 (7)</div>
+    <div class="row"><b>Rootless B</b> : 7-9-3-5 · 7-9-3-13</div>
+    <div class="row"><b>So What</b> : quarte + quarte + quarte + tierce majeure</div>
+    <div class="row"><b>ii–V–I majeur</b> : iim7 → V7 → Imaj7 (les guides glissent d'un ½ ton)</div>
+    <div class="row"><b>ii–V–i mineur</b> : iiø7 → V7♭9 → im6</div>
+    <div class="row"><b>Turnaround</b> : I–VI7–ii–V · subs : I–♭III7–ii–♭II7</div>
+    <div class="row"><b>Sub tritonique</b> : V7 → ♭II7 (mêmes guides échangées)</div>
+    <div class="row"><b>Chord-scales</b> : m7→dorien · 7→mixo (ou altérée) · maj7→ionien/lydien · ø7→locrien · 7♭9→dim ½/ton · °7→dim ton/½</div>
+    <div class="row"><b>Bebop dominante</b> : mixolydien + 7M de passage (8 notes)</div>
+    <div class="row"><b>Swing</b> : croches longue-courte · le temps vit sur 2 et 4</div>
+    <div class="row"><b>Cycle des quartes</b> : C F B♭ E♭ A♭ D♭ G♭ B E A D G</div>
+  </div>`;
+  main.appendChild(c3);
+
+  const c4=document.createElement('div'); c4.className='card';
+  const days=[...Array(7)].map((_,k)=>{
+    const dt=new Date(Date.now()-(6-k)*864e5);
+    return { xp:S.hist[dt.toISOString().slice(0,10)]||0, lbl:'DLMMJVS'[dt.getDay()] };
+  });
+  const mx=Math.max(...days.map(x=>x.xp),1);
+  c4.innerHTML=`<b style="font-size:16px">📊 Stats</b>
+  <div class="statgrid" style="margin-top:10px">
+    <div class="stat"><b>${S.xp}</b><small>XP total</small></div>
+    <div class="stat"><b>${S.streak}</b><small>jours de suite</small></div>
+    <div class="stat"><b>${Object.keys(S.done).length}/${ALL_LESSONS.length}</b><small>leçons maîtrisées</small></div>
+    <div class="stat"><b>${Object.keys(S.grids).length}</b><small>grilles jouées</small></div>
+    <div class="stat"><b>${S.hist[todayStr()]||0}</b><small>XP aujourd'hui</small></div>
+    <div class="stat"><b>${S.earBest||'–'}</b><small>record oreille /10</small></div>
+    ${S.best.sp?`<div class="stat"><b>${S.best.sp}s</b><small>sprint des espèces</small></div>`:''}
+    ${S.best.shell?`<div class="stat"><b>${S.best.shell}s</b><small>shells chrono</small></div>`:''}
+    ${S.best.rl?`<div class="stat"><b>${S.best.rl}s</b><small>roulette rootless</small></div>`:''}
+    ${S.best.guide?`<div class="stat"><b>${S.best.guide}s</b><small>ligne des guides</small></div>`:''}
+  </div>
+  <div class="week">${days.map(x=>`<div class="col${x.xp?'':' z'}"><div class="bar" style="height:${Math.max(3,Math.round(x.xp/mx*100))}%"></div><small>${x.lbl}</small></div>`).join('')}</div>
+  <div style="text-align:center;font-size:11px;color:var(--dim);margin-top:6px">XP des 7 derniers jours — la régularité fait le musicien.</div>`;
+  main.appendChild(c4);
+
+  const cB=document.createElement('div'); cB.className='card';
+  cB.innerHTML=`<b style="font-size:16px">🎓 Le bilan</b>
+  <p style="color:var(--dim);font-size:13px;margin:4px 0 0">${S.bilan?`Dernier bilan : <b style="color:var(--acc)">${S.bilan.global}/100</b> (${S.bilan.date}). Refais-le pour mesurer le chemin.`:'Évalue ton niveau sur cinq axes en 5 minutes.'}</p>`;
+  const bb=document.createElement('button'); bb.className='btn ghost'; bb.textContent=S.bilan?'↻ Refaire le bilan':'🎯 Faire le bilan';
+  bb.onclick=()=>runBilan(); cB.appendChild(bb); main.appendChild(cB);
+
+  const c5=document.createElement('div'); c5.className='card';
+  c5.innerHTML=`<b style="font-size:16px">💾 Sauvegarde</b>
+  <p style="color:var(--dim);font-size:13px;margin:4px 0 0">Pour transférer ta progression sur un autre appareil : copie ce lien et ouvre-le là-bas.</p>`;
+  const cp=document.createElement('button'); cp.className='btn ghost'; cp.textContent='Copier mon lien de sauvegarde';
+  cp.onclick=()=>{
+    const b64=btoa(unescape(encodeURIComponent(JSON.stringify(S)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const url=location.origin+location.pathname+'?restore='+b64;
+    (navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(
+      ()=>toast('📋 Lien copié'),
+      ()=>{ prompt('Copie ce lien :',url); });
+  };
+  c5.appendChild(cp); main.appendChild(c5);
+}
+
+/* ================================================================
+   OVERLAY + LEÇONS
+   ================================================================ */
+const overlay=document.getElementById('overlay');
+const overlayInner=document.getElementById('overlayInner');
+function closeOverlay(){ overlay.classList.remove('open'); Metro.stop(); JP.stopAll(false); render(); }
+function openCustom(title,fill){
+  overlayInner.innerHTML=`<div class="topbar"><button class="back">←</button><b>${title}</b></div>`;
+  overlayInner.querySelector('.back').onclick=closeOverlay;
+  overlay.classList.add('open'); overlay.scrollTop=0;
+  fill(overlayInner, closeOverlay);
+}
+function openLesson(l){
+  openCustom(l.title,(inner)=>{
+    const th=document.createElement('div'); th.className='theory'; th.innerHTML=l.theory;
+    inner.appendChild(th);
+    const vq=l.ex.video||(l.title+' piano jazz');
+    const vl=document.createElement('a');
+    vl.href='https://www.youtube.com/results?search_query='+encodeURIComponent(vq);
+    vl.target='_blank'; vl.rel='noopener noreferrer';
+    vl.className='btn ghost'; vl.style.textDecoration='none'; vl.style.display='block';
+    vl.textContent='▶️ Voir des vidéos sur ce thème';
+    th.appendChild(vl);
+    const go=document.createElement('button'); go.className='btn';
+    go.textContent=S.done[l.id]?'↻ Refaire l\'exercice (+10 XP)':'🎷 Passer à la pratique';
+    inner.appendChild(go);
+    go.onclick=()=>{
+      th.remove(); go.remove();
+      const exDiv=document.createElement('div'); inner.appendChild(exDiv);
+      const doneCb=(success)=>{
+        if(!success){ closeOverlay(); return; }
+        chime();
+        const reps=lessonReps(l);
+        if(S.done[l.id]){ award(10); toast('↻ Révision · +10 XP'); }
+        else if(palierTakenToday(l.id)){
+          award(5);
+          toast('Palier déjà pris aujourd\'hui · +5 XP — le prochain demain');
+        } else {
+          const p=progOf(l.id);
+          p.n++; p.last=todayStr(); S.prog[l.id]=p; save();
+          if(p.n>=reps){
+            S.done[l.id]=true; save(); award(l.xp); tada();
+            toast(`🎩 Leçon MAÎTRISÉE · +${l.xp} XP`);
+          } else {
+            award(15);
+            toast(`Palier ${p.n}/${reps} · +15 XP — le suivant demain`);
+          }
+        }
+        dailyMark(0);
+        setTimeout(closeOverlay,600);
+      };
+      const ex=resolveEx(l.ex);
+      if(ex.type==='quiz') runQuiz(exDiv,ex,doneCb);
+      else if(ex.type==='chord') runChord(exDiv,ex,doneCb);
+      else if(ex.type==='prog') runProg(exDiv,ex,doneCb);
+      else if(ex.type==='scale') runScale(exDiv,ex,doneCb);
+      else if(ex.type==='ear') runEar(exDiv,ex,doneCb);
+      else if(ex.type==='guide') runGuide(exDiv,ex,doneCb);
+      else if(ex.type==='practice') runPractice(exDiv,ex,doneCb);
+    };
+  });
+}
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function progDots(el,total,idx,badIdx=new Set()){
+  el.innerHTML='';
+  for(let i=0;i<total;i++){
+    const d=document.createElement('i');
+    if(badIdx.has(i)) d.className='bad'; else if(i<idx) d.className='on';
+    el.appendChild(d);
+  }
+}
+
+/* ---------- moteur : QUIZ ---------- */
+function runQuiz(el,ex,cb){
+  let i=0, wrong=0;
+  const show=()=>{
+    const q=ex.qs[i];
+    el.innerHTML=`<div class="exhead"><div class="sub">Question ${i+1}/${ex.qs.length}</div>
+      <div style="font-size:18px;font-weight:700;margin:8px 0 14px">${q.q}</div></div>`;
+    const dots=document.createElement('div'); dots.className='exprog'; el.appendChild(dots);
+    progDots(dots,ex.qs.length,i);
+    q.opts.forEach((o,oi)=>{
+      const b=document.createElement('button'); b.className='quizopt'; b.textContent=o;
+      b.onclick=()=>{
+        el.querySelectorAll('.quizopt').forEach(x=>x.style.pointerEvents='none');
+        if(oi===q.a){ b.classList.add('right'); tada(); }
+        else { b.classList.add('wrong'); wrong++; buzz();
+          el.querySelectorAll('.quizopt')[q.a].classList.add('right'); }
+        const why=document.createElement('div'); why.className='quizwhy'; why.textContent=q.why;
+        el.appendChild(why);
+        const nx=document.createElement('button'); nx.className='btn';
+        nx.textContent=i+1<ex.qs.length?'Suivant →':'Terminer';
+        nx.onclick=()=>{ i++; if(i<ex.qs.length) show(); else finish(); };
+        el.appendChild(nx);
+      };
+      el.appendChild(b);
+    });
+  };
+  const finish=()=>{
+    const score=ex.qs.length-wrong;
+    if(ex.scored){
+      el.innerHTML=`<div class="exhead"><div class="target">${score}/${ex.qs.length}</div><div class="sub">Section notée.</div></div>`;
+      setTimeout(()=>cb(true,score),900); return;
+    }
+    if(wrong===0) el.innerHTML=`<div class="exhead"><div class="target">🎯 ${score}/${ex.qs.length}</div><div class="sub">Sans faute. C'est comme ça qu'on bosse.</div></div>`;
+    else if(score>=Math.ceil(ex.qs.length*0.6)) el.innerHTML=`<div class="exhead"><div class="target">${score}/${ex.qs.length}</div><div class="sub">Validé — mais relis les explications des erreurs avant de filer.</div></div>`;
+    else { el.innerHTML=`<div class="exhead"><div class="target">${score}/${ex.qs.length}</div><div class="sub">Insuffisant. Relis la théorie et reviens — la base doit être béton.</div></div>`;
+      const rb=document.createElement('button'); rb.className='btn'; rb.textContent='↻ Recommencer';
+      rb.onclick=()=>{ i=0; wrong=0; show(); }; el.appendChild(rb); return; }
+    setTimeout(()=>cb(true),1200);
+  };
+  show();
+}
+
+/* ---------- moteur : ACCORDS / VOICINGS ---------- */
+function runChord(el,ex,cb){
+  const items=ex.items||genChordItems(ex.gen);
+  const pass=ex.pass||items.length;
+  const hiKey=ex.hi||79;
+  let i=0, fails=0, score=0, advancing=false; const badIdx=new Set(), failedItems=new Set();
+  const sel=new Set();
+  el.innerHTML=`<div class="exhead"><div class="target" id="tgt"></div><div class="sub">${ex.sub||''}</div>
+    <button class="btn small ghost" id="listen" style="margin-top:8px">🔊 Écouter la cible</button></div>
+    <div class="exprog" id="dots"></div><div id="kb"></div>
+    <div class="fb" id="fb"></div>
+    <div class="exrow"><button class="btn ghost" id="clr">Effacer</button><button class="btn" id="val">Valider</button></div>`;
+  el.querySelector('#listen').onclick=()=>{
+    const it=items[i]; if(it) playChord(it.hint||voicingFor(it.root,it.t),1.6);
+  };
+  const kb=buildKeyboard(48,hiKey,(m,k)=>{
+    if(sel.has(m)){ sel.delete(m); k.classList.remove('sel'); }
+    else { sel.add(m); k.classList.add('sel'); playNote(m,.9); }
+  });
+  el.querySelector('#kb').appendChild(kb);
+  const tgt=el.querySelector('#tgt'), fb=el.querySelector('#fb'), dots=el.querySelector('#dots');
+  const show=()=>{
+    const it=items[i]; sel.clear(); kb.clearSel(); advancing=false;
+    tgt.textContent=it.label||chordName(it.root,it.t);
+    fb.textContent=''; fb.className='fb'; fails=0;
+    progDots(dots,items.length,i,badIdx);
+  };
+  const check=()=>{
+    if(advancing) return;
+    const it=items[i];
+    if(!sel.size){ fb.textContent='Sélectionne des touches d\'abord.'; fb.className='fb bad'; return; }
+    const need=[...new Set((it.iv||CT[it.t].iv).map(x=>(it.root+x)%12))];
+    const pcs=[...new Set([...sel].map(m=>m%12))];
+    const ok=pcs.length===need.length && need.every(p=>pcs.includes(p));
+    if(ok){
+      advancing=true; score++; playChord([...sel]); tada();
+      fb.textContent='✓ '+(it.label||chordName(it.root,it.t))+' — '+(it.notesTxt||chordNotes(it.root,it.t)); fb.className='fb ok';
+      setTimeout(()=>{ i++; if(i<items.length) show(); else finish(); },900);
+    } else {
+      fails++; failedItems.add(i);
+      buzz(); kb.kbd.classList.add('shake'); setTimeout(()=>kb.kbd.classList.remove('shake'),400);
+      if(fails===1) fb.textContent=it.msg1||('✗ Recompte — '+((it.iv||CT[it.t].iv).length)+' notes différentes.');
+      else if(fails===2) fb.textContent='✗ Les notes : '+(it.notesTxt||chordNotes(it.root,it.t));
+      else {
+        fb.textContent='Regarde les touches bleues, joue-les, retiens le geste.';
+        (it.hint||voicingFor(it.root,it.t)).forEach(m=>{ const k=kb.keyEl(m); if(k) k.classList.add('hint'); });
+      }
+      fb.className='fb bad';
+      if(fails>=3) badIdx.add(i);
+    }
+  };
+  el.querySelector('#clr').onclick=()=>{ sel.clear(); kb.clearSel(); };
+  el.querySelector('#val').onclick=check;
+  const finish=()=>{
+    const okPass=score>=pass;
+    el.innerHTML=`<div class="exhead"><div class="target">${okPass?'🎩':'👹'} ${score}/${items.length}</div>
+      <div class="sub">${okPass?(score===items.length?'Sans faute. Le club applaudit.':'Validé. Les accords ratés : rejoue-les au vrai piano, maintenant.')
+      :'En dessous de '+pass+'/'+items.length+'. On ne monte pas sur scène avec ça : recommence.'}</div></div>`;
+    if(!okPass){ const rb=document.createElement('button'); rb.className='btn'; rb.textContent='↻ Recommencer';
+      rb.onclick=()=>{ el.innerHTML=''; runChord(el,ex,cb); }; el.appendChild(rb); return; }
+    setTimeout(()=>cb(true,score,failedItems.size),1300);
+  };
+  show();
+}
+
+/* ---------- moteur : PROGRESSION ---------- */
+function runProg(el,ex,cb){
+  const seq=[]; for(let r=0;r<(ex.rounds||1);r++) seq.push(...ex.chords);
+  let i=0, fails=0; const sel=new Set();
+  const needOf=c=>[...new Set((c.iv||CT[c.t].iv).map(x=>(c.root+x)%12))];
+  const labelOf=c=>c.label||chordName(c.root,c.t);
+  el.innerHTML=`<div class="exhead"><div class="sub">${ex.sub||''}</div>
+    <button class="btn small ghost" id="demo" style="margin-top:8px">🔊 Écouter la progression</button></div>
+    <div class="chips" id="chips"></div><div id="kb"></div>
+    <div class="fb" id="fb"></div>
+    <div class="exrow"><button class="btn ghost" id="clr">Effacer</button><button class="btn" id="val">Valider</button></div>`;
+  el.querySelector('#demo').onclick=()=>{
+    ex.chords.forEach((c,ci)=>setTimeout(()=>{
+      const v=c.iv?c.iv.map(x=>50+(((c.root+c.iv[0])-50)%12+12)%12+(x-c.iv[0])):voicingFor(c.root,c.t);
+      playChord(v,1.1);
+    },ci*900));
+  };
+  const kb=buildKeyboard(48,79,(m,k)=>{
+    if(sel.has(m)){ sel.delete(m); k.classList.remove('sel'); }
+    else { sel.add(m); k.classList.add('sel'); playNote(m,.9); }
+  });
+  el.querySelector('#kb').appendChild(kb);
+  const chips=el.querySelector('#chips'), fb=el.querySelector('#fb');
+  const draw=()=>{
+    chips.innerHTML='';
+    seq.forEach((c,ci)=>{
+      const s=document.createElement('div');
+      s.className='chip'+(ci===i?' cur':ci<i?' done':'');
+      s.textContent=labelOf(c);
+      chips.appendChild(s);
+    });
+  };
+  const show=()=>{ sel.clear(); kb.clearSel(); fb.textContent=''; fb.className='fb'; fails=0; draw(); };
+  el.querySelector('#clr').onclick=()=>{ sel.clear(); kb.clearSel(); };
+  el.querySelector('#val').onclick=()=>{
+    const c=seq[i];
+    if(!sel.size){ fb.textContent='Sélectionne des touches d\'abord.'; fb.className='fb bad'; return; }
+    const need=needOf(c);
+    const pcs=[...new Set([...sel].map(m=>m%12))];
+    const ok=pcs.length===need.length && need.every(p=>pcs.includes(p));
+    if(ok){
+      playChord([...sel]); tada();
+      fb.textContent='✓ '+labelOf(c); fb.className='fb ok';
+      setTimeout(()=>{ i++; if(i<seq.length) show(); else {
+        el.innerHTML=`<div class="exhead"><div class="target">🌊</div>
+          <div class="sub">Progression bouclée. Maintenant la vraie version : au piano, en boucle, sans regarder tes mains.</div></div>`;
+        setTimeout(()=>cb(true),1300);
+      }},800);
+    } else {
+      fails++; buzz(); kb.kbd.classList.add('shake'); setTimeout(()=>kb.kbd.classList.remove('shake'),400);
+      fb.textContent=fails>=2?'✗ '+labelOf(c)+' = '+(c.iv?c.iv.map(x=>NOTE[(c.root+x)%12]).join(' – '):chordNotes(c.root,c.t))
+        :'✗ Pas ça. Construis-le calmement.';
+      fb.className='fb bad';
+    }
+  };
+  show();
+}
+
+/* ---------- moteur : GAMME ---------- */
+function runScale(el,ex,cb){
+  const pcSeq=ex.pattern.map(p=>(ex.root+p)%12);
+  let idx=0, startMidi=null, resets=0;
+  el.innerHTML=`<div class="exhead"><div class="target">${ex.name}</div><div class="sub">${ex.sub||''}</div></div>
+    <div class="exprog" id="dots"></div><div id="kb"></div><div class="fb" id="fb"></div>`;
+  const dots=el.querySelector('#dots'), fb=el.querySelector('#fb');
+  const kb=buildKeyboard(48,79,(m,k)=>{
+    playNote(m,.8);
+    if(idx===0 && m%12===pcSeq[0] && m+ex.pattern[ex.pattern.length-1]>79){
+      fb.textContent='Bonne note, mais trop haut — le sommet sortirait du clavier. Commence plus grave.';
+      fb.className='fb bad'; return;
+    }
+    const expected=idx===0?null:startMidi+ex.pattern[idx];
+    const okTap=idx===0?(m%12===pcSeq[0]):(m===expected);
+    if(okTap){
+      if(idx===0) startMidi=m;
+      k.classList.add('flash'); setTimeout(()=>k.classList.remove('flash'),250);
+      idx++;
+      progDots(dots,ex.pattern.length,idx);
+      if(idx>=ex.pattern.length){
+        tada();
+        fb.textContent='✓ Gamme complète.'; fb.className='fb ok';
+        el.querySelectorAll('.key').forEach(x=>x.style.pointerEvents='none');
+        setTimeout(()=>{
+          el.innerHTML=`<div class="exhead"><div class="target">🪜</div>
+          <div class="sub">Bien. Maintenant au vrai piano : la même, en croches swing, métronome sur 2 et 4.</div></div>`;
+          setTimeout(()=>cb(true),1300);
+        },800);
+      } else {
+        fb.textContent='Note '+(idx+1)+'/'+ex.pattern.length+' — la suivante est à '+(ex.pattern[idx]-ex.pattern[idx-1])+' demi-ton(s).';
+        fb.className='fb';
+      }
+    } else {
+      buzz(); resets++;
+      idx=0; startMidi=null;
+      progDots(dots,ex.pattern.length,0);
+      fb.textContent=resets>=3
+        ?'✗ On repart du début. Formule : '+ex.pattern.slice(1).map((p,j)=>p-ex.pattern[j]).join('-')
+        :'✗ Mauvaise note — on repart de la première.';
+      fb.className='fb bad';
+    }
+  });
+  el.querySelector('#kb').appendChild(kb);
+  progDots(dots,ex.pattern.length,0);
+  fb.textContent='Commence sur '+NOTE[pcSeq[0]]+' ('+NOTE_FR[pcSeq[0]]+').';
+}
+
+/* ---------- moteur : OREILLE ---------- */
+const EAR_LBL={maj7:'maj7',m7:'m7',dom7:'7',m7b5:'ø7',dim7:'°7',dom9:'9',dom7b9:'7♭9',dom7s5:'7♯5',maj6:'6',m6:'m6'};
+function runEar(el,ex,cb){
+  let i=0, score=0, answered=false, cur=null; const badIdx=new Set();
+  el.innerHTML=`<div class="exhead"><div class="target">👂</div><div class="sub">${ex.sub||''}</div></div>
+    <div class="exprog" id="dots"></div>
+    <div class="exrow"><button class="btn ghost" id="replay">🔊 Réécouter</button><button class="btn ghost" id="arp">🎵 Note par note</button></div>
+    <div class="earbtns" id="btns"></div><div class="fb" id="fb"></div>`;
+  const dots=el.querySelector('#dots'), fb=el.querySelector('#fb'), btns=el.querySelector('#btns');
+  ex.kinds.forEach(k=>{
+    const b=document.createElement('button'); b.className='btn ghost'; b.textContent=EAR_LBL[k]; b.dataset.k=k;
+    b.onclick=()=>answer(k,b); btns.appendChild(b);
+  });
+  if(ex.kinds.length===3) btns.style.gridTemplateColumns='1fr 1fr 1fr';
+  const notesOf=()=>CT[cur.t].iv.map(x=>cur.rootMidi+x);
+  const playBlock=()=>{ if(cur) playChord(notesOf(),1.8,.03); };
+  const playArp=()=>{ if(cur) notesOf().forEach((m,idx)=>playNote(m,.7,.4,idx*.5)); };
+  el.querySelector('#replay').onclick=playBlock;
+  el.querySelector('#arp').onclick=playArp;
+  const next=()=>{
+    answered=false;
+    cur={ t:pick(ex.kinds), rootMidi:50+Math.floor(Math.random()*13) };
+    fb.textContent=''; fb.className='fb';
+    btns.querySelectorAll('.btn').forEach(b=>{ b.classList.remove('ok'); b.style.opacity=1; b.style.pointerEvents='auto'; });
+    progDots(dots,ex.count,i,badIdx);
+    setTimeout(playBlock,400);
+  };
+  const answer=(k,b)=>{
+    if(answered) return; answered=true;
+    btns.querySelectorAll('.btn').forEach(x=>x.style.pointerEvents='none');
+    if(k===cur.t){ score++; b.classList.add('ok'); tada();
+      fb.textContent='✓ '+EAR_LBL[cur.t]+' — '+chordNotes(cur.rootMidi%12,cur.t); fb.className='fb ok'; }
+    else { buzz(); badIdx.add(i);
+      fb.textContent='✗ C\'était '+EAR_LBL[cur.t]+'. Réécoute :'; fb.className='fb bad';
+      btns.querySelector(`[data-k="${cur.t}"]`).classList.add('ok');
+      setTimeout(playArp,350); }
+    setTimeout(()=>{ i++; if(i<ex.count) next(); else finish(); }, k===cur.t?1200:2300);
+  };
+  const finish=()=>{
+    const okPass=score>=(ex.pass||0);
+    el.innerHTML=`<div class="exhead"><div class="target">${okPass?'👂':'😵'} ${score}/${ex.count}</div>
+      <div class="sub">${okPass?'L\'oreille se muscle. Reviens demain — elle progresse en dormant.'
+        :'En dessous de '+ex.pass+'/'+ex.count+'. Réécoute chaque couleur note par note, puis recommence.'}</div></div>`;
+    if(score>S.earBest){ S.earBest=score; save(); }
+    if(!okPass){ const rb=document.createElement('button'); rb.className='btn'; rb.textContent='↻ Recommencer';
+      rb.onclick=()=>{ el.innerHTML=''; runEar(el,ex,cb); }; el.appendChild(rb); return; }
+    setTimeout(()=>cb(true,score),1300);
+  };
+  next();
+}
+
+/* ---------- moteur : GUIDE TONES ---------- */
+function runGuide(el,ex,cb){
+  const chords=ex.chords;
+  let i=0, fails=0, wrongTot=0, advancing=false; const sel=new Set();
+  const needOf=c=>{ const [g3,g7]=guideIv(c.t); return [(c.root+g3)%12,(c.root+g7)%12]; };
+  el.innerHTML=`<div class="exhead"><div class="target" id="tgt"></div>
+    <div class="sub">${ex.sub||'La 3 et la 7 de chaque accord. Deux notes, toute l\'histoire.'}</div>
+    <button class="btn small ghost" id="listen" style="margin-top:8px">🔊 Basse + guides</button></div>
+    <div class="chips" id="chips"></div><div id="kb"></div>
+    <div class="fb" id="fb"></div>
+    <div class="exrow"><button class="btn ghost" id="clr">Effacer</button><button class="btn" id="val">Valider</button></div>`;
+  const kb=buildKeyboard(48,76,(m,k)=>{
+    if(sel.has(m)){ sel.delete(m); k.classList.remove('sel'); }
+    else { sel.add(m); k.classList.add('sel'); playNote(m,.9); }
+  });
+  el.querySelector('#kb').appendChild(kb);
+  const tgt=el.querySelector('#tgt'), fb=el.querySelector('#fb'), chips=el.querySelector('#chips');
+  const midisOf=c=>{ const need=needOf(c); return need.map(pc=>52+((pc-52)%12+12)%12); };
+  el.querySelector('#listen').onclick=()=>{
+    const c=chords[i]; if(!c) return;
+    playNote(36+c.root,1.6,.45);
+    midisOf(c).forEach((m,ix)=>playNote(m,1.5,.32,.06+ix*.04));
+  };
+  const draw=()=>{
+    chips.innerHTML='';
+    chords.forEach((c,ci)=>{
+      const s=document.createElement('div');
+      s.className='chip'+(ci===i?' cur':ci<i?' done':'');
+      s.textContent=chordName(c.root,c.t);
+      chips.appendChild(s);
+    });
+    const cur=chips.children[i]; if(cur) cur.scrollIntoView({block:'nearest'});
+  };
+  const show=()=>{
+    sel.clear(); kb.clearSel(); advancing=false; fails=0;
+    tgt.textContent=chordName(chords[i].root,chords[i].t);
+    fb.textContent=''; fb.className='fb'; draw();
+  };
+  el.querySelector('#clr').onclick=()=>{ sel.clear(); kb.clearSel(); };
+  el.querySelector('#val').onclick=()=>{
+    if(advancing) return;
+    const c=chords[i], need=needOf(c);
+    const pcs=[...new Set([...sel].map(m=>m%12))];
+    if(!sel.size){ fb.textContent='Deux notes : la 3 et la 7.'; fb.className='fb bad'; return; }
+    const ok=pcs.length===2 && need.every(p=>pcs.includes(p));
+    if(ok){
+      advancing=true;
+      playNote(36+c.root,1.2,.4); [...sel].forEach((m,ix)=>playNote(m,1.2,.35,.05+ix*.03));
+      tada();
+      fb.textContent='✓ 3 = '+NOTE[need[0]]+' · 7 = '+NOTE[need[1]];
+      fb.className='fb ok';
+      setTimeout(()=>{ i++; if(i<chords.length) show(); else finish(); },800);
+    } else {
+      fails++; wrongTot++;
+      buzz(); kb.kbd.classList.add('shake'); setTimeout(()=>kb.kbd.classList.remove('shake'),400);
+      if(fails===1) fb.textContent='✗ Exactement DEUX notes : la 3 et la 7 de '+chordName(c.root,c.t)+'.';
+      else { fb.textContent='✗ '+chordName(c.root,c.t)+' : 3 = '+NOTE[need[0]]+' · 7 = '+NOTE[need[1]];
+        midisOf(c).forEach(m=>{ const k=kb.keyEl(m); if(k) k.classList.add('hint'); }); }
+      fb.className='fb bad';
+    }
+  };
+  const finish=()=>{
+    el.innerHTML=`<div class="exhead"><div class="target">🎯</div>
+      <div class="sub">${wrongTot?'Ligne bouclée ('+wrongTot+' accroc'+(wrongTot>1?'s':'')+'). Refais-la au piano en rondes, en legato.':'Ligne parfaite. Tu viens de jouer le squelette d\'un vrai solo.'}</div></div>`;
+    setTimeout(()=>cb(true,wrongTot),1300);
+  };
+  show();
+}
+
+/* ---------- moteur : PRATIQUE (vrai piano) ---------- */
+function runPractice(el,ex,cb){
+  el.innerHTML=`<div class="exhead"><div class="target">🎹</div>
+    <div class="sub">Cet exercice se joue sur ton vrai piano. L'app pose le cadre, tes doigts font le reste.</div></div>`;
+  if(ex.demos){
+    const dc=document.createElement('div'); dc.className='card';
+    dc.innerHTML=`<b style="font-size:14px">🎧 Écoute d'abord</b>
+      <p style="color:var(--dim);font-size:12px;margin:4px 0 8px">Section rythmique et exemple joués par l'app. Imite ce que tu entends, pas ce que tu lis.</p>`;
+    let last=null;
+    ex.demos.forEach(sp=>{
+      const b=document.createElement('button'); b.className='btn ghost small'; b.style.width='100%'; b.style.marginTop='6px';
+      b.textContent='▶ '+sp.label;
+      b.onclick=()=>{ Metro.stop(); last=sp; playDemo(sp,ex.bpm,1); };
+      dc.appendChild(b);
+    });
+    const slow=document.createElement('button'); slow.className='btn ghost small'; slow.style.width='100%'; slow.style.marginTop='6px';
+    slow.textContent='🐢 Réécouter au ralenti';
+    slow.onclick=()=>{ Metro.stop(); playDemo(last||ex.demos[0],ex.bpm,.6); };
+    dc.appendChild(slow);
+    el.appendChild(dc);
+  }
+  ex.steps.forEach(([t,dsc],i)=>{
+    const s=document.createElement('div'); s.className='checkstep';
+    s.innerHTML=`<div class="n">${i+1}</div><div><b>${t}</b><br>${dsc}</div>`;
+    el.appendChild(s);
+  });
+  el.appendChild(metroWidget(ex.bpm, !!ex.metro24));
+  const warn=document.createElement('p');
+  warn.style.cssText='color:var(--dim);font-size:13px;text-align:center;margin:8px 0';
+  warn.textContent='Validation sur l\'honneur. Tricher ici, c\'est voler ton futur toi.';
+  el.appendChild(warn);
+  const b=document.createElement('button'); b.className='btn ok';
+  b.textContent='✓ Fait proprement, en entier';
+  b.onclick=()=>{ Metro.stop(); cb(true); };
+  el.appendChild(b);
+}
+
+/* ================================================================
+   GRILLES — la section rythmique (walking bass + ride + comping)
+   ================================================================ */
+const B=(r,t)=>({r,t});
+const RC_A=[[B(10,'maj6'),B(7,'dom7')],[B(0,'m7'),B(5,'dom7')],[B(10,'maj6'),B(7,'dom7')],[B(0,'m7'),B(5,'dom7')],
+            [B(5,'m7'),B(10,'dom7')],[B(3,'maj6'),B(3,'m6')],[B(2,'m7'),B(7,'dom7')],[B(0,'m7'),B(5,'dom7')]];
+const GRIDS=[
+  {id:'bluesF', ico:'🎺', title:'Blues en Fa', sub:'Le blues jazz, 12 mesures avec ses ii–V', bpm:120, min:70, max:220,
+   hint:'Étage 1 : gamme blues de Fa partout. Étage 2 : suis chaque accord (mixo sur les 7). Les grands alternent les deux.',
+   bars:[[B(5,'dom7')],[B(10,'dom7')],[B(5,'dom7')],[B(0,'m7'),B(5,'dom7')],
+         [B(10,'dom7')],[B(11,'dim7')],[B(5,'dom7')],[B(9,'m7'),B(2,'dom7')],
+         [B(7,'m7')],[B(0,'dom7')],[B(5,'dom7'),B(2,'dom7')],[B(7,'m7'),B(0,'dom7')]]},
+  {id:'bluesCm', ico:'🌑', title:'Blues mineur en Do', sub:'Le blues sombre — « Mr. P.C. » et compagnie', bpm:132, min:70, max:220,
+   hint:'Do mineur penta/blues comme base. Sur A♭7 : la ♯11 (Ré). Sur G7 : altère tant que tu veux, ça résout.',
+   bars:[[B(0,'m7')],[B(5,'m7')],[B(0,'m7')],[B(0,'m7')],
+         [B(5,'m7')],[B(5,'m7')],[B(0,'m7')],[B(0,'m7')],
+         [B(8,'dom7')],[B(7,'dom7b9')],[B(0,'m7')],[B(2,'m7b5'),B(7,'dom7b9')]]},
+  {id:'carrousel', ico:'🎠', title:'Le Carrousel ii–V–I', sub:'Les 12 tonalités, par le cycle — 2 mesures chacune', bpm:112, min:60, max:200,
+   hint:'ii–V–I partout : vise les guides à chaque changement. Un chorus complet = les 12 tonalités. Personne ne t\'échappe.',
+   bars:CYCLE.flatMap(k=>[[B((k+2)%12,'m7'),B((k+7)%12,'dom7')],[B(k,'maj7')]])},
+  {id:'rc', ico:'🅰', title:'Rhythm changes en Si♭', sub:'AABA 32 mesures — le test des jams', bpm:140, min:80, max:240,
+   hint:'Le A : pense en zones (Si♭ → E♭ → retour), vise les guides. Le pont : 4 dominantes, 2 mesures chacune — donne une couleur différente à chaque.',
+   bars:[...RC_A,...RC_A,
+         [B(2,'dom7')],[B(2,'dom7')],[B(7,'dom7')],[B(7,'dom7')],[B(0,'dom7')],[B(0,'dom7')],[B(5,'dom7')],[B(5,'dom7')],
+         ...RC_A]},
+  {id:'modal', ico:'🌀', title:'Modal dorien (forme So What)', sub:'16 Ré dorien · 8 Mi♭ dorien · 8 Ré dorien', bpm:132, min:70, max:200,
+   hint:'Une gamme, tout le temps : c\'est là qu\'on entend si tu PHRASES. Voicings quartal, motifs, espace. La note de trop s\'entend double ici.',
+   bars:[...Array(16)].map(()=>[B(2,'m7')]).concat([...Array(8)].map(()=>[B(3,'m7')])).concat([...Array(8)].map(()=>[B(2,'m7')]))},
+  {id:'turn', ico:'↩️', title:'Turnaround en Do', sub:'I–VI7–ii–V en boucle : le laboratoire', bpm:104, min:60, max:200,
+   hint:'Cible : la 3 de chaque accord, pile sur son temps 1. Puis essaie les subs tritoniques main gauche (E♭7, D♭7).',
+   bars:[[B(0,'maj7'),B(9,'dom7')],[B(2,'m7'),B(7,'dom7')],[B(4,'m7'),B(9,'dom7')],[B(2,'m7'),B(7,'dom7')]]},
+  {id:'iivm', ico:'🌘', title:'ii–V–i mineur en Do', sub:'ø7 → 7♭9 → m6, en boucle lente', bpm:92, min:60, max:180,
+   hint:'Sur Dø7 : locrien. Sur G7♭9 : dim ½ton/ton ou altérée. Sur Cm6 : mineure mélodique. Trois couleurs en 4 mesures.',
+   bars:[[B(2,'m7b5')],[B(7,'dom7b9')],[B(0,'m6')],[B(0,'m6')]]},
+  {id:'ballad', ico:'🕯', title:'Ballade en Mi♭', sub:'I–vi–ii–V et son détour — jouer PEU, jouer beau', bpm:66, min:50, max:110,
+   hint:'À ce tempo, tout s\'entend. Doubles croches interdites au premier chorus. Voicings amples, mélodie chantable, silences assumés.',
+   bars:[[B(3,'maj7')],[B(0,'m7')],[B(5,'m7')],[B(10,'dom7')],[B(7,'m7')],[B(0,'dom7b9')],[B(5,'m7')],[B(10,'dom7')]]},
+  {id:'coltrane', ico:'🌐', title:'Cycle de tierces (Coltrane)', sub:'La matrice Giant Steps, 16 mesures — le mur', bpm:120, min:60, max:280, hard:true,
+   hint:'Trois centres à la tierce majeure. Ne SUIS pas à l\'oreille : connais tes trois maison (les maj7) et vise les guides. Commence à 60 BPM, sans honte.',
+   bars:[[B(11,'maj7'),B(2,'dom7')],[B(7,'maj7'),B(10,'dom7')],[B(3,'maj7')],[B(9,'m7'),B(2,'dom7')],
+         [B(7,'maj7'),B(10,'dom7')],[B(3,'maj7'),B(6,'dom7')],[B(11,'maj7')],[B(5,'m7'),B(10,'dom7')],
+         [B(3,'maj7'),B(6,'dom7')],[B(11,'maj7'),B(2,'dom7')],[B(7,'maj7')],[B(1,'m7'),B(6,'dom7')],
+         [B(11,'maj7'),B(2,'dom7')],[B(7,'maj7'),B(10,'dom7')],[B(3,'maj7'),B(1,'m7')],[B(6,'dom7')]]},
+  {id:'birdblues', ico:'🐦', title:'Bird blues en Fa', sub:'Le blues réharmonisé de Parker — ii–V en cascade', bpm:132, min:70, max:240, hard:true,
+   hint:'Chaque mesure ou presque est un ii–V. Suis les guides de près : ici la gamme blues seule ne suffit plus. C\'est le blues des harmonistes.',
+   bars:[[B(5,'maj7')],[B(4,'m7'),B(9,'dom7')],[B(2,'m7'),B(7,'dom7')],[B(0,'m7'),B(5,'dom7')],
+         [B(10,'dom7')],[B(10,'m7'),B(3,'dom7')],[B(9,'m7'),B(2,'dom7')],[B(8,'m7'),B(1,'dom7')],
+         [B(7,'m7')],[B(0,'dom7')],[B(5,'maj7'),B(2,'dom7')],[B(7,'m7'),B(0,'dom7')]]},
+];
+function walkBar(bar,nextRootPc){
+  const N=pc=>38+(((pc-38)%12)+12)%12;
+  const clamp=x=>{ while(x>52)x-=12; while(x<33)x+=12; return x; };
+  const app=pc=>{ const t=N(pc); return clamp(t+(Math.random()<.5?1:-1)); };
+  if(bar.length===2){
+    const a=bar[0], b=bar[1];
+    const mid=Math.random()<.5?N(a.r)+CT[a.t].iv[1]:N(a.r)+CT[a.t].iv[2];
+    return [N(a.r), clamp(mid), N(b.r), app(nextRootPc)];
+  }
+  const c=bar[0], R=N(c.r), iv=CT[c.t].iv;
+  const b2=clamp(Math.random()<.6?R+iv[1]:R+2);
+  const b3=clamp(Math.random()<.6?R+iv[2]:R-5);
+  return [R,b2,b3,app(nextRootPc)];
+}
+const COMPS=[[[0,1.6]],[[1.667,1.4]],[[0,.7],[1.667,1.6]],[[2,.9],[3.667,.35]],[[1.667,2.2]],[[0,.5],[2.667,.9]]];
+const JP={
+  on:false, g:null, piano:true, bpm:120, timer:null, uiTimer:null,
+  barIdx:0, nextT:0, sched:[], nChorus:0, els:{},
+  start(g){
+    this.stopAll(false); const ctx=ac();
+    this.g=g; this.on=true; this.barIdx=-1; this.nChorus=0;
+    this.nextT=ctx.currentTime+.15; this.sched=[];
+    this.timer=setInterval(()=>this.tick(),60); this.tick();
+    /* UI sur interval, pas rAF : un rAF suspendu (onglet en fond) gèlerait l'affichage */
+    this.uiTimer=setInterval(()=>this.frame(),120); this.frame();
+    if(this.els.play) this.els.play.textContent='◼ Stop';
+  },
+  tick(){
+    if(!this.on) return; const ctx=ac();
+    while(this.nextT<ctx.currentTime+.9){
+      const spb=60/this.bpm;
+      this.schedBar(this.nextT,spb);
+      this.sched.push({t:this.nextT,i:this.barIdx,spb});
+      if(this.sched.length>10) this.sched.shift();
+      this.nextT+=4*spb; this.barIdx++;
+    }
+  },
+  schedBar(t0,spb){
+    const ctx=ac(), rel=t0-ctx.currentTime;
+    if(this.barIdx<0){
+      for(let b=0;b<4;b++) Metro.click(t0+b*spb, b===0);
+      return;
+    }
+    const L=this.g.bars.length, bi=this.barIdx%L, bar=this.g.bars[bi];
+    const nextRoot=this.g.bars[(bi+1)%L][0].r;
+    if(this.barIdx>0 && bi===0){
+      setTimeout(()=>{ if(this.on) this.chorusDone(); }, Math.max(0,rel*1000));
+    }
+    [[0,0],[1,1],[1.667,0],[2,0],[3,1],[3.667,0]].forEach(([p,a])=>playRide(rel+p*spb,!!a));
+    [1,3].forEach(p=>playHat(rel+p*spb));
+    walkBar(bar,nextRoot).forEach((m,b)=>playBass(m, rel+b*spb, spb*1.05, .5));
+    if(this.piano){
+      if(bar.length===2){
+        [[bar[0],0],[bar[1],2]].forEach(([c,off])=>{
+          compVoi(c.r,c.t).forEach((m,ix)=>playNote(m,1.1*spb,.2,rel+off*spb+ix*.008));
+        });
+      } else {
+        const c=bar[0], pat=pick(COMPS), v=compVoi(c.r,c.t);
+        pat.forEach(([p,d])=>v.forEach((m,ix)=>playNote(m,d*spb*.9,.2,rel+p*spb+ix*.008)));
+      }
+    }
+  },
+  chorusDone(){
+    this.nChorus++;
+    if(this.nChorus===1){
+      const id=this.g.id, first=!S.grids[id];
+      S.grids[id]=(S.grids[id]||0)+1; save();
+      award(first?12:6); dailyMark(2);
+      toast(first?'🥁 Premier chorus complet · +12 XP':'🥁 Chorus bouclé · +6 XP');
+    }
+    if(this.els.cc) this.els.cc.textContent='chorus '+(this.nChorus+1);
+  },
+  frame(){
+    if(!this.on) return;
+    const now=ac().currentTime;
+    let cur=null;
+    for(const s of this.sched){ if(s.t<=now) cur=s; }
+    if(cur && this.els.cn){
+      if(cur.i<0){
+        const beat=Math.floor((now-cur.t)/cur.spb);
+        this.els.cn.textContent='· '+(4-Math.min(3,beat))+' ·';
+        this.els.nx.textContent='Décompte…'; this.els.sc.textContent=''; this.els.gd.textContent='';
+      } else {
+        const L=this.g.bars.length, bi=cur.i%L, bar=this.g.bars[bi];
+        const beat=(now-cur.t)/cur.spb;
+        const half=(bar.length===2 && beat>=2)?1:0;
+        const c=bar[half];
+        const nxBar=this.g.bars[(bi+1)%L];
+        const nxC=(bar.length===2&&half===0)?bar[1]:nxBar[0];
+        this.els.cn.textContent=chordName(c.r,c.t);
+        this.els.nx.textContent='puis : '+chordName(nxC.r,nxC.t)+' · mesure '+(bi+1)+'/'+L;
+        const sf=scaleFor(c.r,c.t);
+        this.els.sc.textContent='🗺 '+sf.name+' : '+sf.notes;
+        const [g3,g7]=guideIv(c.t);
+        this.els.gd.textContent='🎯 guides : '+NOTE[(c.r+g3)%12]+' & '+NOTE[(c.r+g7)%12];
+        if(this._lastStrip!==bi && this.els.strip){
+          this._lastStrip=bi;
+          const cells=this.els.strip.children;
+          for(let x=0;x<cells.length;x++) cells[x].classList.toggle('cur',x===bi);
+          const cell=cells[bi]; if(cell) cell.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+        }
+      }
+    }
+  },
+  stopAll(ui=true){
+    this.on=false;
+    if(this.timer){ clearInterval(this.timer); this.timer=null; }
+    if(this.uiTimer){ clearInterval(this.uiTimer); this.uiTimer=null; }
+    this._lastStrip=-1;
+    if(ui && this.els.play) this.els.play.textContent='▶ Lancer le trio';
+  }
+};
+function renderGrilles(){
+  main.innerHTML=`<h1 class="page">Grilles</h1>
+  <p style="color:var(--dim);font-size:14px;margin:-6px 0 14px">Ta section rythmique : contrebasse qui marche, ride qui chabade, piano débrayable. Choisis une grille, coupe le piano si tu veux comper toi-même, et joue. <b style="color:var(--acc)">Un chorus complet = XP.</b></p>`;
+  const easy=GRIDS.filter(g=>!g.hard), hard=GRIDS.filter(g=>g.hard);
+  const item=g=>{
+    const n=S.grids[g.id];
+    const el=document.createElement('div'); el.className='griditem';
+    el.innerHTML=`<div class="ico">${g.ico}</div>
+      <div class="t"><b>${g.title}</b><small>${g.sub}</small></div>
+      ${n?`<div class="played">✓ ${n}×</div>`:''}`;
+    el.onclick=()=>openGrid(g);
+    main.appendChild(el);
+  };
+  easy.forEach(item);
+  const h=document.createElement('h2');
+  h.style.cssText='font-size:13px;color:var(--bad);text-transform:uppercase;letter-spacing:1.2px;margin:14px 0 8px;padding-left:4px';
+  h.textContent='☠️ Terrain difficile';
+  main.appendChild(h);
+  hard.forEach(item);
+}
+function openGrid(g){
+  openCustom(g.title,(inner)=>{
+    JP.g=g; JP.bpm=g.bpm; JP.piano=true; JP.els={};
+    const info=document.createElement('p');
+    info.style.cssText='color:var(--dim);font-size:13px;margin:-4px 0 4px;text-align:center';
+    info.textContent=g.bars.length+' mesures · en boucle';
+    inner.appendChild(info);
+    const now=document.createElement('div'); now.className='nowchord';
+    now.innerHTML=`<div class="cn" id="gcn">—</div><div class="nx" id="gnx">Appuie sur Lancer</div>
+      <div class="sc" id="gsc"></div><div class="gd" id="ggd"></div>`;
+    inner.appendChild(now);
+    const strip=document.createElement('div'); strip.className='strip';
+    g.bars.forEach((bar,bi)=>{
+      const c=document.createElement('div'); c.className='cc';
+      c.innerHTML=bar.map(x=>chordName(x.r,x.t)).join(' ')+`<small>${bi+1}</small>`;
+      strip.appendChild(c);
+    });
+    inner.appendChild(strip);
+    const tempo=document.createElement('div'); tempo.className='tempo';
+    tempo.innerHTML=`<span class="tl">Tempo</span><input type="range" min="${g.min}" max="${g.max}" step="2" value="${g.bpm}"><span class="tv">${g.bpm} BPM</span>`;
+    inner.appendChild(tempo);
+    const slider=tempo.querySelector('input'), tv=tempo.querySelector('.tv');
+    slider.oninput=()=>{ JP.bpm=+slider.value; tv.textContent=slider.value+' BPM'; };
+    const opts=document.createElement('div'); opts.className='selrow';
+    const pt=document.createElement('div'); pt.className='tag on'; pt.textContent='🎹 Piano du trio';
+    pt.onclick=()=>{ JP.piano=!JP.piano; pt.classList.toggle('on',JP.piano); };
+    opts.appendChild(pt);
+    const cc=document.createElement('div'); cc.className='tag'; cc.style.pointerEvents='none'; cc.textContent='chorus 1';
+    opts.appendChild(cc);
+    inner.appendChild(opts);
+    const hintP=document.createElement('div'); hintP.className='theory';
+    hintP.innerHTML=`<div class="tip" style="margin:10px 0">💡 ${g.hint}</div>
+      <p style="color:var(--dim);font-size:12px;text-align:center;margin-top:2px">Coupe « Piano du trio » pour travailler TON comping, laisse-le pour soloter par-dessus.</p>`;
+    inner.appendChild(hintP);
+    const play=document.createElement('button'); play.className='btn'; play.textContent='▶ Lancer le trio';
+    play.onclick=()=>{ if(JP.on) JP.stopAll(); else JP.start(g); };
+    inner.appendChild(play);
+    JP.els={ cn:now.querySelector('#gcn'), nx:now.querySelector('#gnx'), sc:now.querySelector('#gsc'),
+             gd:now.querySelector('#ggd'), strip, play, cc };
+  });
+}
+
+/* ================================================================
+   LE BILAN — évaluation d'entrée (et re-testable)
+   ================================================================ */
+function bilanChords(){
+  /* dur : toutes les espèces + tensions + altérations, fondamentales variées */
+  const specs=[['maj9',[0,5,10]],['dom7b9',[7,2,9]],['m7b5',[11,4,9]],['dim7',[1,8,3]],
+               ['dom7s5',[7,0,3]],['m9',[2,10,5]]];
+  return specs.map(([t,rr])=>{ const root=pick(rr); return {root,t}; });
+}
+function bilanVoicings(){
+  const items=[];
+  items.push(genShellItems(1)[0]);
+  items.push(genRootlessItems(1,'A')[0]);
+  items.push(genRootlessItems(1,'B')[0]);
+  items.push(genSoWhatItems(1)[0]);
+  items.push(genUpperItems(1)[0]);
+  return items;
+}
+function bilanGuideChords(){
+  const k1=pick([1,6,3,8]), k2=pick([4,11,9,2]); /* tonalités « pénibles » */
+  return iiVI(k1).concat(iiVI(k2));
+}
+const BILAN_AXES=[
+  {key:'harmonie', label:'Harmonie', ico:'🎨'},
+  {key:'voicings', label:'Voicings', ico:'🎩'},
+  {key:'theorie',  label:'Théorie',  ico:'🗺'},
+  {key:'oreille',  label:'Oreille',  ico:'👂'},
+  {key:'placement',label:'Guides',   ico:'🎯'},
+];
+function bilanLevel(g){
+  if(g<35) return {name:'Découvre le jazz', reco:'Commence tranquillement au Module 1 — les fondations d\'abord.', tag:'🌱'};
+  if(g<55) return {name:'En chemin', reco:'Solidifie les voicings (Module 2) et le ii–V–I (Module 3) avant l\'impro.', tag:'🎹'};
+  if(g<72) return {name:'Solide', reco:'Attaque l\'improvisation (Module 5) et le temps (Module 6). L\'avancé viendra vite.', tag:'🎷'};
+  if(g<88) return {name:'Avancé', reco:'Le Module 8 et le terrain difficile (Coltrane, Bird blues) sont pour toi.', tag:'🎩'};
+  return {name:'Redoutable', reco:'Franchement ? Sers-toi de l\'app comme sparring-partner : grilles dures, tempo max, oreille sur les altérées.', tag:'🏆'};
+}
+function runBilan(returnTo){
+  openCustom('🎓 Le bilan de '+USER,(inner,close)=>{
+    const intro=document.createElement('div'); intro.className='theory';
+    intro.innerHTML=`<p>Cinq épreuves, ~5 minutes. On note ta <b>précision au premier essai</b> — donc pas d'aide, pas de clavier libre à côté. À la fin : ton profil complet et par où commencer.</p>
+      <div class="warn">Sois honnête avec toi-même : un bilan gonflé ne trompe que le prochain toi qui se plantera en jam.</div>`;
+    inner.appendChild(intro);
+    const start=document.createElement('button'); start.className='btn'; start.textContent='🎯 Lancer le bilan';
+    inner.appendChild(start);
+    const skip=document.createElement('button'); skip.className='btn ghost'; skip.textContent='Plus tard';
+    skip.onclick=()=>{ close(); if(returnTo) returnTo(); };
+    inner.appendChild(skip);
+    start.onclick=()=>{
+      intro.remove(); start.remove(); skip.remove();
+      const axes={};
+      const wrap=document.createElement('div'); inner.appendChild(wrap);
+      const seq=[
+        ['1/5 · Lecture d\'accords','harmonie','chord',
+          {items:bilanChords(),pass:0,hi:79,sub:'Construis chaque accord. Aucune aide.'},
+          (r,ex)=>ex.items.length-(r.b||0)],
+        ['2/5 · Voicings pro','voicings','chord',
+          {items:bilanVoicings(),pass:0,hi:84,sub:'Shell, rootless A/B, So What, upper structure. Tu les connais ou pas.'},
+          (r,ex)=>ex.items.length-(r.b||0)],
+        ['3/5 · Théorie & couleurs','theorie','quiz',
+          {qs:genCSQs(6),scored:true},
+          (r)=>r.a||0],
+        ['4/5 · Oreille','oreille','ear',
+          {kinds:['maj7','m7','dom7','m7b5','dim7','dom7b9'],count:6,pass:0,sub:'À l\'aveugle : nomme la couleur.'},
+          (r)=>r.a||0],
+        ['5/5 · Guide tones','placement','guide',
+          {chords:bilanGuideChords(),sub:'La 3 et la 7 de chaque accord — dans des tonalités pénibles.'},
+          (r,ex)=>ex.chords.length-Math.min(r.a||0,ex.chords.length)],
+      ];
+      const totals={harmonie:6,voicings:5,theorie:6,oreille:6,placement:6};
+      let k=0;
+      const next=()=>{
+        wrap.innerHTML='';
+        if(k>=seq.length) return finishBilan();
+        const [title,axis,type,ex,scoreFn]=seq[k];
+        const lab=document.createElement('p');
+        lab.style.cssText='text-align:center;color:var(--acc);font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px';
+        lab.textContent=title;
+        wrap.appendChild(lab);
+        const box=document.createElement('div'); wrap.appendChild(box);
+        const eng={chord:runChord,quiz:runQuiz,ear:runEar,guide:runGuide}[type];
+        eng(box,ex,(ok,a,b)=>{
+          const sc=scoreFn({a,b},ex);
+          axes[axis]=Math.max(0,Math.round(sc/totals[axis]*100));
+          k++; next();
+        });
+      };
+      const finishBilan=()=>{
+        const vals=BILAN_AXES.map(a=>axes[a.key]||0);
+        const global=Math.round(vals.reduce((s,x)=>s+x,0)/vals.length);
+        const lv=bilanLevel(global);
+        S.bilan={date:todayStr(), axes, global}; S.assessed=true; save();
+        if(!S._bilanXP){ S._bilanXP=true; award(40); }
+        wrap.innerHTML='';
+        const head=document.createElement('div'); head.className='exhead';
+        head.innerHTML=`<div class="target">${lv.tag} ${global}/100</div>
+          <div class="sub">Profil de ${USER} · niveau estimé : <b style="color:var(--acc)">${lv.name}</b></div>`;
+        wrap.appendChild(head);
+        const bars=document.createElement('div'); bars.className='bilanbars';
+        BILAN_AXES.forEach(a=>{
+          const v=axes[a.key]||0;
+          const row=document.createElement('div'); row.className='brow';
+          row.innerHTML=`<span class="bl">${a.ico} ${a.label}</span>
+            <span class="bt"><i style="width:${v}%;background:${v>=70?'var(--ok)':v>=45?'var(--acc)':'var(--bad)'}"></i></span>
+            <span class="bv">${v}</span>`;
+          bars.appendChild(row);
+        });
+        wrap.appendChild(bars);
+        const reco=document.createElement('div'); reco.className='theory';
+        reco.innerHTML=`<div class="tip" style="margin:14px 0">🧭 ${lv.reco}</div>
+          <p style="color:var(--dim);font-size:13px">Tu pourras refaire ce bilan quand tu veux (onglet Outils) pour mesurer le chemin parcouru.</p>`;
+        wrap.appendChild(reco);
+        const done=document.createElement('button'); done.className='btn'; done.textContent='C\'est parti — vers le parcours';
+        done.onclick=()=>{ close(); tab='parcours';
+          document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.tab==='parcours'));
+          render(); };
+        wrap.appendChild(done);
+      };
+      next();
+    };
+  });
+}
+function openWelcome(){
+  openCustom('👋 Bienvenue',(inner,close)=>{
+    inner.querySelector('.back').style.visibility='hidden';
+    const t=document.createElement('div'); t.className='theory';
+    t.innerHTML=`<h3 style="font-size:20px">Salut ${USER} 🎹</h3>
+      <p>Bienvenue dans <b>Sideman</b> — l'appli qui te fait passer de « bon pianiste » à <b>jazzman</b> : voicings, ii–V–I dans les 12 tons, impro, comping, formes… jusqu'aux Coltrane changes.</p>
+      <p>Tu joues déjà bien : on ne va pas te faire réviser tes gammes. On commence par un <b>bilan</b> pour situer exactement ton niveau et te dire par où attaquer.</p>
+      <div class="tip">Tout est jouable sur le clavier de l'écran, mais chaque exercice a sa vraie version : <b>ton piano</b>. L'app valide ta tête ; le piano valide tes doigts.</div>`;
+    inner.appendChild(t);
+    const go=document.createElement('button'); go.className='btn'; go.textContent='🎯 Faire le bilan (~5 min)';
+    go.onclick=()=>{ close(); runBilan(); };
+    inner.appendChild(go);
+    const later=document.createElement('button'); later.className='btn ghost'; later.textContent='Explorer d\'abord';
+    later.onclick=()=>{ S.assessed=true; save(); close(); };
+    inner.appendChild(later);
+  });
+}
+
+/* ---------------- init ---------------- */
+updateHeader(); render();
+if(!S.assessed) setTimeout(openWelcome,300);
+
+</script>
+</body>
+</html>
