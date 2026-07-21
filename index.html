@@ -89,6 +89,10 @@
   .key.black.sel{background:linear-gradient(#c99a2e,var(--acc2))}
   .key.white.hint{background:linear-gradient(#cfe4ff,#8db8f5)}
   .key.black.hint{background:linear-gradient(#3b6db5,#2a4d80)}
+  /* une touche indiquée en bleu ET sélectionnée doit se voir sélectionnée :
+     sans ça, jouer les touches suggérées ne donnait aucun retour visuel */
+  .key.white.hint.sel{background:linear-gradient(#ffe9b0,var(--acc))}
+  .key.black.hint.sel{background:linear-gradient(#c99a2e,var(--acc2))}
   .key.flash{background:var(--ok)!important}
   .key.white.wrong{background:linear-gradient(#ffb3bb,var(--bad))!important}
   .key.black.wrong{background:linear-gradient(#b53b47,#7a222c)!important}
@@ -1635,10 +1639,13 @@ const overlay=document.getElementById('overlay');
 const overlayInner=document.getElementById('overlayInner');
 function closeOverlay(){ overlay.classList.remove('open'); Metro.stop(); JP.stopAll(false); render(); }
 function openCustom(title,fill){
-  overlayInner.innerHTML=`<div class="topbar"><button class="back">←</button><b>${title}</b></div>`;
+  /* le contenu vit dans un conteneur dédié : les moteurs d'exercice font
+     el.innerHTML='…' et effaceraient sinon la barre du haut — donc le bouton
+     retour — piégeant l'utilisateur dans l'exercice. */
+  overlayInner.innerHTML=`<div class="topbar"><button class="back">←</button><b>${title}</b></div><div id="ovbody"></div>`;
   overlayInner.querySelector('.back').onclick=closeOverlay;
   overlay.classList.add('open'); overlay.scrollTop=0;
-  fill(overlayInner, closeOverlay);
+  fill(overlayInner.querySelector('#ovbody'), closeOverlay);
 }
 function openLesson(l){
   openCustom(l.title,(inner)=>{
@@ -1756,7 +1763,8 @@ function runChord(el,ex,cb){
     <button class="btn small ghost" id="listen" style="margin-top:8px">🔊 Écouter la cible</button></div>
     <div class="exprog" id="dots"></div><div id="kb"></div>
     <div class="fb" id="fb"></div>
-    <div class="exrow"><button class="btn ghost" id="clr">Effacer</button><button class="btn" id="val">Valider</button></div>`;
+    <div class="exrow"><button class="btn ghost" id="clr">Effacer</button><button class="btn" id="val">Valider</button></div>
+    <button class="btn ghost" id="skip" style="display:none">⏭ Passer cet accord</button>`;
   el.querySelector('#listen').onclick=()=>{
     const it=items[i]; if(it) playChord(it.hint||voicingFor(it.root,it.t),1.6);
   };
@@ -1766,11 +1774,20 @@ function runChord(el,ex,cb){
   });
   el.querySelector('#kb').appendChild(kb);
   const tgt=el.querySelector('#tgt'), fb=el.querySelector('#fb'), dots=el.querySelector('#dots');
+  const skipBtn=el.querySelector('#skip');
   const show=()=>{
     const it=items[i]; sel.clear(); kb.clearSel(); advancing=false;
     tgt.textContent=it.label||chordName(it.root,it.t);
     fb.textContent=''; fb.className='fb'; fails=0;
+    skipBtn.style.display='none';
     progDots(dots,items.length,i,badIdx);
+  };
+  /* un accord vraiment bloquant ne doit jamais figer toute la série */
+  skipBtn.onclick=()=>{
+    if(advancing) return;
+    advancing=true; badIdx.add(i); failedItems.add(i);
+    fb.textContent='Passé — reviens-y à froid, au vrai piano.'; fb.className='fb bad';
+    setTimeout(()=>{ i++; if(i<items.length) show(); else finish(); },600);
   };
   const check=()=>{
     if(advancing) return;
@@ -1789,8 +1806,9 @@ function runChord(el,ex,cb){
       if(fails===1) fb.textContent=it.msg1||('✗ Recompte — '+((it.iv||CT[it.t].iv).length)+' notes différentes.');
       else if(fails===2) fb.textContent='✗ Les notes : '+(it.notesTxt||chordNotes(it.root,it.t));
       else {
-        fb.textContent='Regarde les touches bleues, joue-les, retiens le geste.';
+        fb.textContent='Regarde les touches bleues, joue-les (elles passent en orange), puis Valider.';
         (it.hint||voicingFor(it.root,it.t)).forEach(m=>{ const k=kb.keyEl(m); if(k) k.classList.add('hint'); });
+        skipBtn.style.display='block';
       }
       fb.className='fb bad';
       if(fails>=3) badIdx.add(i);
@@ -1977,7 +1995,8 @@ function runGuide(el,ex,cb){
     <button class="btn small ghost" id="listen" style="margin-top:8px">🔊 Basse + guides</button></div>
     <div class="chips" id="chips"></div><div id="kb"></div>
     <div class="fb" id="fb"></div>
-    <div class="exrow"><button class="btn ghost" id="clr">Effacer</button><button class="btn" id="val">Valider</button></div>`;
+    <div class="exrow"><button class="btn ghost" id="clr">Effacer</button><button class="btn" id="val">Valider</button></div>
+    <button class="btn ghost" id="gskip" style="display:none">⏭ Passer cet accord</button>`;
   const kb=buildKeyboard(48,76,(m,k)=>{
     if(sel.has(m)){ sel.delete(m); k.classList.remove('sel'); }
     else { sel.add(m); k.classList.add('sel'); playNote(m,.9); }
@@ -2000,10 +2019,17 @@ function runGuide(el,ex,cb){
     });
     const cur=chips.children[i]; if(cur) cur.scrollIntoView({block:'nearest'});
   };
+  const gskip=el.querySelector('#gskip');
   const show=()=>{
     sel.clear(); kb.clearSel(); advancing=false; fails=0;
     tgt.textContent=chordName(chords[i].root,chords[i].t);
-    fb.textContent=''; fb.className='fb'; draw();
+    fb.textContent=''; fb.className='fb'; gskip.style.display='none'; draw();
+  };
+  gskip.onclick=()=>{
+    if(advancing) return;
+    advancing=true; wrongTot++;
+    fb.textContent='Passé — celui-là, retravaille-le au piano.'; fb.className='fb bad';
+    setTimeout(()=>{ i++; if(i<chords.length) show(); else finish(); },600);
   };
   el.querySelector('#clr').onclick=()=>{ sel.clear(); kb.clearSel(); };
   el.querySelector('#val').onclick=()=>{
@@ -2023,8 +2049,9 @@ function runGuide(el,ex,cb){
       fails++; wrongTot++;
       buzz(); kb.kbd.classList.add('shake'); setTimeout(()=>kb.kbd.classList.remove('shake'),400);
       if(fails===1) fb.textContent='✗ Exactement DEUX notes : la 3 et la 7 de '+chordName(c.root,c.t)+'.';
-      else { fb.textContent='✗ '+chordName(c.root,c.t)+' : 3 = '+NOTE[need[0]]+' · 7 = '+NOTE[need[1]];
-        midisOf(c).forEach(m=>{ const k=kb.keyEl(m); if(k) k.classList.add('hint'); }); }
+      else { fb.textContent='✗ '+chordName(c.root,c.t)+' : 3 = '+NOTE[need[0]]+' · 7 = '+NOTE[need[1]]+' — joue les touches bleues, elles passent en orange.';
+        midisOf(c).forEach(m=>{ const k=kb.keyEl(m); if(k) k.classList.add('hint'); });
+        gskip.style.display='block'; }
       fb.className='fb bad';
     }
   };
@@ -2419,7 +2446,7 @@ function runBilan(returnTo){
 }
 function openWelcome(){
   openCustom('👋 Bienvenue',(inner,close)=>{
-    inner.querySelector('.back').style.visibility='hidden';
+    overlayInner.querySelector('.back').style.visibility='hidden';
     const t=document.createElement('div'); t.className='theory';
     t.innerHTML=`<h3 style="font-size:20px">Salut ${USER} 🎹</h3>
       <p>Bienvenue dans <b>Sideman</b> — l'appli qui te fait passer de « bon pianiste » à <b>jazzman</b> : voicings, ii–V–I dans les 12 tons, impro, comping, formes… jusqu'aux Coltrane changes.</p>
