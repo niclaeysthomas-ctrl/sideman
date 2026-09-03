@@ -2467,5 +2467,8 @@ updateHeader(); render();
 if(!S.assessed) setTimeout(openWelcome,300);
 
 </script>
+<script>
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+</script>
 </body>
 </html>
